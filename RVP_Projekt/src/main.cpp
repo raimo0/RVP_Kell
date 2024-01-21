@@ -8,8 +8,7 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
-#include <string>
-#include<iostream>
+
 // Connectors
 #define LEDH 13
 #define LEDM 12
