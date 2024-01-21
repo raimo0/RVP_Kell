@@ -1,5 +1,4 @@
 #include <LiquidCrystal.h>
-#include <FastLED.h>
 #include <WiFi.h>
 #include <time.h>
 #include <Arduino.h>
@@ -7,8 +6,7 @@
 #include "leds.h"
 #include <WiFiManager.h>
 
-#define NUM_LEDS 11
-#define LED_DATA_PIN 15
+
 
 // Led riba
 CRGB leds[NUM_LEDS];
@@ -17,8 +15,6 @@ CRGB leds[NUM_LEDS];
 LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 
 // Variables
-const char *ssid = "Hotspot";
-const char *password = "123456789";
 const char *ntpServer = "0.europe.pool.ntp.org";
 const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
@@ -110,7 +106,8 @@ void loop(){
   }
 
   if (digitalRead(nupp) == LOW) {
-    praeguneVarv = (praeguneVarv + 32) % 256; 
+    varviIndeks = (varviIndeks + 1) % (sizeof(varviValikud) / sizeof(varviValikud[0]));
+    praeguneVarv = varviValikud[varviIndeks];
     delay(500); 
   }
 
