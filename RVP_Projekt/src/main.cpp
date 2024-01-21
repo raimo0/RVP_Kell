@@ -1,13 +1,13 @@
 #include <LiquidCrystal.h>
 #include <FastLED.h>
 #include <WiFi.h>
-//#include <ESPAsyncWebServer.h>
 #include <time.h>
 #include <Arduino.h>
 #include "motors.h"
+#include "leds.h"
 #include <WiFiManager.h>
 
-#define NUM_LEDS 30
+#define NUM_LEDS 11
 #define LED_DATA_PIN 15
 
 // Led riba
@@ -17,8 +17,6 @@ CRGB leds[NUM_LEDS];
 LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 
 // Variables
-
-int debugLED = 22;
 const char *ssid = "Hotspot";
 const char *password = "123456789";
 const char *ntpServer = "0.europe.pool.ntp.org";
@@ -26,12 +24,9 @@ const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
 
 // Connectors
-int LEDH = 13;
-int LEDM = 12;
 int valgusSensor = 35;
 int nupp = 4;
-int LED_riba = 15;
-int previousMinute = -1;
+int eelmineMinut = -1;
 //AsyncWebServer server(80);
 // put function declarations here:
 
@@ -40,29 +35,23 @@ int previousMinute = -1;
 void setup(){
   Serial.begin(115200);
   motorSetup();
+  ledSetup();
   WiFiManager wm;
-  pinMode(LEDH,OUTPUT);
-  pinMode(LEDM,OUTPUT);
-  pinMode(LED_riba,OUTPUT);
   pinMode(nupp,INPUT);
   pinMode(valgusSensor,INPUT);
-  pinMode(debugLED, OUTPUT);
   bool res;
-  // res = wm.autoConnect(); // auto generated AP name from chipid
-  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+
+  res = wm.autoConnect("Seadistus"); // password protected ap
 
   if(!res) {
-      Serial.println("Failed to connect");
-      // ESP.restart();
+    Serial.println("Ülesseadmine ebaõnnestus. Palun sisesta WiFi andmed");
+    wm.startConfigPortal("Seadistus"); 
   } 
   else {
-      //if you get here you have connected to the WiFi    
-      Serial.println("connected...yeey :)");
+      Serial.println("Ühendus loodud!");
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   }
-  digitalWrite(LEDH, HIGH); // Pin High
 
   // LED riba
   FastLED.addLeds<WS2812, LED_DATA_PIN, RGB>(leds, NUM_LEDS);
@@ -70,7 +59,6 @@ void setup(){
   // LCD
   lcd.begin(16, 2);
   lcd.clear();
-  digitalWrite(LEDH,HIGH);
 
 }
 
@@ -81,23 +69,24 @@ void loop(){
   liigutaMinutiMootor("vasak",200);
 
   // LED riba
-  int ledBrightness = 100;
-  leds[0] = CHSV(0,255,ledBrightness);
-  leds[1] = CHSV(32,255,ledBrightness);
-  leds[2] = CHSV(96,255,ledBrightness);
-  leds[3] = CHSV(24,255,ledBrightness);
-  leds[4] = CHSV(0,255,ledBrightness);
-  leds[5] = CHSV(32,255,ledBrightness);
-  leds[6] = CHSV(96,255,ledBrightness);
-  leds[7] = CHSV(24,255,ledBrightness);
-  leds[8] = CHSV(0,255,ledBrightness);
-  leds[9] = CHSV(32,255,ledBrightness);
-  leds[10] = CHSV(96,255,ledBrightness);
+  for (int i = 0; i < NUM_LEDS; i++){
+    leds[i] = CHSV(praeguneVarv,255,ledBrightness);
+  }
   FastLED.show();
   
   
   time_t now = time(nullptr);
+
   struct tm *timeInfo;
+  lcd.setCursor(0, 0);
+  lcd.print("Kuupäev: ");
+  lcd.print(timeInfo->tm_mday);   
+  lcd.print("-");
+  lcd.print(timeInfo->tm_mon + 1);    
+  lcd.print("-");
+  lcd.print(timeInfo->tm_year + 1900);
+  
+  
   timeInfo = localtime(&now);
   lcd.setCursor(0, 1);
   lcd.print("Kell: ");
@@ -107,15 +96,23 @@ void loop(){
   lcd.print(":");
   lcd.print(timeInfo->tm_sec);
   
-  if (timeInfo->tm_min != previousMinute) {
-    if (previousMinute == 59) {
+  if (timeInfo->tm_min != eelmineMinut) {
+    if (eelmineMinut == 59) {
       liigutaMinutiMootor("vasak",1200);
     }
     liigutaMinutiMootor("vasak",200);
-    previousMinute = timeInfo->tm_min;
+    eelmineMinut = timeInfo->tm_min;
   }
-  lcd.setCursor(0,0);
-  lcd.print(previousMinute);
-  delay(100);
+  if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59) {
+    plaadiLiigutamine();
+  } else if (timeInfo->tm_hour == 23 && timeInfo->tm_min == 59) {
+    plaadiLiigutamine();
+  }
+
+  if (digitalRead(nupp) == LOW) {
+    praeguneVarv = (praeguneVarv + 32) % 256; 
+    delay(500); 
+  }
+
   
 }
