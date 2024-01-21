@@ -23,6 +23,7 @@ const int daylightOffset_sec = 3600;
 int valgusSensor = 35;
 int nupp = 4;
 int eelmineMinut = -1;
+bool res;
 //AsyncWebServer server(80);
 // put function declarations here:
 
@@ -35,17 +36,22 @@ void setup(){
   WiFiManager wm;
   pinMode(nupp,INPUT);
   pinMode(valgusSensor,INPUT);
-  bool res;
 
   res = wm.autoConnect("Seadistus"); // password protected ap
 
   if(!res) {
     Serial.println("Ülesseadmine ebaõnnestus. Palun sisesta WiFi andmed");
+    lcd.setCursor(0,1);
+    lcd.print("Seadista WiFi");
     wm.startConfigPortal("Seadistus"); 
   } 
   else {
       Serial.println("Ühendus loodud!");
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+      lcd.setCursor(0,1);
+      lcd.print((char)153);
+      lcd.setCursor(1,1);
+      lcd.print("hendus loodud!");
 
   }
 
@@ -81,8 +87,8 @@ void loop(){
   lcd.print(timeInfo->tm_mon + 1);    
   lcd.print("-");
   lcd.print(timeInfo->tm_year + 1900);
-  
-  
+
+  /*
   timeInfo = localtime(&now);
   lcd.setCursor(0, 1);
   lcd.print("Kell: ");
@@ -91,12 +97,12 @@ void loop(){
   lcd.print(timeInfo->tm_min);
   lcd.print(":");
   lcd.print(timeInfo->tm_sec);
-  
+  */
   if (timeInfo->tm_min != eelmineMinut) {
     if (eelmineMinut == 59) {
-      liigutaMinutiMootor("vasak",1200);
+      liigutaMinutiMootor("vasak",minutAlgusesse);
     }
-    liigutaMinutiMootor("vasak",200);
+    liigutaMinutiMootor("parem",minutiSamm);
     eelmineMinut = timeInfo->tm_min;
   }
   if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59) {

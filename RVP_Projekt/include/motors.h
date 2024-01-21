@@ -1,7 +1,7 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-extern const int minutiSamm;
+const int minutiSamm = 200;
 extern const int directionNum;
 extern const int stepNum;
 extern const int directionMin;
@@ -10,7 +10,7 @@ extern const int directionTund;
 extern const int stepTund;
 extern const int nsleep;
 extern const int numberOfSteps;
-extern const int minutAlgusesse;
+const int minutAlgusesse = 1200;
 extern const int sammuArv;
 
 

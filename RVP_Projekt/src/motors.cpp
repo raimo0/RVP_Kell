@@ -13,8 +13,6 @@ const int numberOfSteps = 1000;
 const int kaugus = 4;
 const int nsleep = 23;
 
-const int minutiSamm = 200;
-const int minutAlgusesse = 1200;
 const int sammuArv = 0;
 
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin){
