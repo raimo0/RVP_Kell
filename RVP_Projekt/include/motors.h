@@ -17,8 +17,8 @@ extern const int sammuArv;
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin);
 void motorSetup(void);
 void plaadiLiigutamine(String suund);
-void liigutaMinutiMootor(String suund, int sammuArv);
-void liigutaTunniMootor(String suund, int sammuArv);
+void liigutaMinutiMootor(int sammuArv);
+void liigutaTunniMootor(int sammuArv);
 
 
 

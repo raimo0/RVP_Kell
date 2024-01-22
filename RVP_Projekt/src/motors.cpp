@@ -39,22 +39,22 @@ void plaadiLiigutamine(String suund){
   moveStepper(numberOfSteps, 50, 2, stepNum);
 }
 
-void liigutaMinutiMootor(String suund, int sammuArv = 200){
-  if (suund == "vasak"){
+void liigutaMinutiMootor(int sammuArv = 200){
+  if (sammuArv < 0){
     digitalWrite(directionMin, LOW);
   } else {
     digitalWrite(directionMin, HIGH);
   }
-  moveStepper(sammuArv, 50, 2, stepMin);
+  moveStepper((sammuArv*-1), 50, 2, stepMin);
 }
 
-void liigutaTunniMootor(String suund, int sammuArv = 200){
-  if (suund == "vasak"){
+void liigutaTunniMootor(int sammuArv = 200){
+  if (sammuArv < 0){
     digitalWrite(directionTund, LOW);
   } else {
     digitalWrite(directionTund, HIGH);
   }
-  moveStepper(sammuArv, 50, 2, stepTund);
+  moveStepper((sammuArv*-1), 50, 2, stepTund);
 }
 
 void motorSetup() {

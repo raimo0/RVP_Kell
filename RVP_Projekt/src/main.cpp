@@ -204,6 +204,7 @@ void setup()
 
 void loop()
 {
+  Serial.println("Ter");
   // Motor control
   //liigutaMinutiMootor("vasak", 1200);
   //liigutaTunniMootor("parem",50);
@@ -239,9 +240,9 @@ void loop()
   lcd.print(timeInfo->tm_year % 100);
   if (timeInfo->tm_min != eelmineMinut) {
     if (eelmineMinut == 59) {
-      liigutaMinutiMootor("vasak",minutAlgusesse);
+      liigutaMinutiMootor(minutAlgusesse);
     }
-    liigutaMinutiMootor("parem",minutiSamm);
+    liigutaMinutiMootor(minutiSamm);
     eelmineMinut = timeInfo->tm_min;
   }
   if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59) {
@@ -252,7 +253,7 @@ void loop()
   if (Serial.available() > 0) {
           String input = Serial.readStringUntil('\n');
           int steps = input.toInt();
-          liigutaTunniMootor("vasak",steps);
+          liigutaTunniMootor(steps);
       }
   //delay(100);
 }
