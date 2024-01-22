@@ -33,14 +33,12 @@ void plaadiLiigutamine(String suund)
 {
   if (suund == "vasak")
   {
-    digitalWrite(directionMin, LOW);
+    digitalWrite(directionNum, HIGH);
   }
   else
   {
-    digitalWrite(directionMin, HIGH);
+    digitalWrite(directionNum, LOW);
   }
-  moveStepper(numberOfSteps, 50, 2, stepNum);
-  digitalWrite(directionNum, LOW);
   moveStepper(numberOfSteps, 50, 2, stepNum);
 }
 
@@ -49,12 +47,13 @@ void liigutaMinutiMootor(int sammuArv = 200)
   if (sammuArv < 0)
   {
     digitalWrite(directionMin, LOW);
+    sammuArv *= -1;
   }
   else
   {
     digitalWrite(directionMin, HIGH);
   }
-  moveStepper((sammuArv * -1), 50, 2, stepMin);
+  moveStepper(sammuArv, 50, 2, stepMin);
 }
 
 void liigutaTunniMootor(int sammuArv = 200)

@@ -26,8 +26,9 @@ const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
 unsigned long button_time = 0;
 unsigned long last_button_time = 0;
-
+int eelmineTund = 0; // Add this line
 int eelmineMinut = -1;
+int totalSteps = 0;
 
 char colors[3][7] = {"00ff00", "ff0000", "0000ff"};
 
@@ -145,7 +146,29 @@ void setup()
   ledSetup();
   plaadiLiigutamine("vasak");
   attachInterrupt(NUPP, isr, FALLING);
+  liigutaTunniMootor(-5000);
+  liigutaMinutiMootor(3000);
+  /*
+  time_t now = time(nullptr);
+  struct tm *timeInfo;
+  timeInfo = localtime(&now);
+  int hour = timeInfo->tm_hour;
+  int minute = timeInfo->tm_min;
 
+  for (int i = 0; i <= hour; ++i)
+    {
+      totalSteps += tunniSammud[i % 12];
+    }
+
+    int currentSteps = 0;
+    if (eelmineTund >= 0 && eelmineTund < 12)
+    {
+      currentSteps = totalSteps - tunniSammud[eelmineTund];
+    }
+
+    int stepsToMove = totalSteps - currentSteps;
+    liigutaTunniMootor(stepsToMove);
+    */
   WiFiManager wm;
   // wm.resetSettings();
   if (!SPIFFS.begin())
@@ -202,6 +225,17 @@ void setup()
   webSocket.onEvent(onWsEvent);
   server.addHandler(&webSocket);
   server.begin();
+  time_t now = time(nullptr);
+  struct tm *timeInfo;
+  timeInfo = localtime(&now);
+  int hour = timeInfo->tm_hour;
+  int minute = timeInfo->tm_min;
+  int second = timeInfo->tm_sec;
+  if (hour >= 12){
+    plaadiLiigutamine("parem");
+  } else if (hour < 12){
+    plaadiLiigutamine("vasak");
+  }
 }
 
 void loop()
@@ -229,6 +263,9 @@ void loop()
   time_t now = time(nullptr);
   struct tm *timeInfo;
   timeInfo = localtime(&now);
+  int hour = timeInfo->tm_hour;
+  int minute = timeInfo->tm_min;
+  int second = timeInfo->tm_sec;
   lcd.setCursor(0, 0);
   lcd.print("Kuup");
   lcd.print((char)0b10000100);
@@ -239,29 +276,40 @@ void loop()
   lcd.print(timeInfo->tm_mon + 1);
   lcd.print("-");
   lcd.print(timeInfo->tm_year % 100);
-  if (timeInfo->tm_min != eelmineMinut)
-  {
-    if (eelmineMinut == 59)
-    {
-      liigutaMinutiMootor(minutAlgusesse);
-    }
-    liigutaMinutiMootor(minutiSamm);
-    eelmineMinut = timeInfo->tm_min;
-  }
-  if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59)
-  {
-    plaadiLiigutamine("vasak");
-  }
-  else if (timeInfo->tm_hour == 23 && timeInfo->tm_min == 59)
-  {
-    plaadiLiigutamine("parem");
-  }
-  if (Serial.available() > 0)
-  {
+
+  if (Serial.available() > 0){
     String input = Serial.readStringUntil('\n');
     Serial.println(input);
+    Serial.println("TERE");
     int steps = input.toInt();
-    liigutaTunniMootor(steps);
+    liigutaMinutiMootor(steps);
   }
+  for (int i = 0; i <= sizeof(minutiSammud)/sizeof(minutiSammud[0]);i++){
+    liigutaMinutiMootor(minutiSammud[i]);
+    Serial.print(i);
+    delay(2000);
+  }
+
+  /*
+  int length = sizeof(tunniSammudTopelt)/sizeof(tunniSammudTopelt[0]);
+    if (hour != eelmineTund){
+      totalSteps = 0;
+    for (int i = 0; i <= hour+1; ++i)
+    {
+      totalSteps += tunniSammudTopelt[i % length];
+    }
+    int currentSteps = 0;
+    if (eelmineTund >= 0 && eelmineTund <length)
+    {
+      currentSteps = totalSteps - tunniSammudTopelt[eelmineTund];
+    }
+
+    int stepsToMove = totalSteps - currentSteps;
+    liigutaTunniMootor(totalSteps);
+
+    eelmineTund = hour;
+    }
+    */
+  
   // delay(100);
 }
