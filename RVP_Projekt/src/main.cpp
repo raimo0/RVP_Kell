@@ -4,18 +4,15 @@
 #include <time.h>
 #include <Arduino.h>
 #include "motors.h"
+#include "leds.h"
 #include <WiFiManager.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
 
 // Connectors
-#define LEDH 13
-#define LEDM 12
 #define VALGUS_SENSOR 35
 #define NUPP 4
-#define LED_RIBA 15
-#define NUM_LEDS 11
 
 // Led riba
 CRGB leds[NUM_LEDS];
@@ -35,8 +32,6 @@ const int daylightOffset_sec = 3600;
 int previousMinute = -1;
 int prev_button_state = 1;
 
-int selected_color_preset = 1;
-int selected_brightness = 100;
 char colors[3][7] = {"ff0000", "00ff00", "0000ff"};
 
 AsyncWebServer server(80);
@@ -134,8 +129,9 @@ void setup()
 {
   Serial.begin(115200);
   motorSetup();
+  ledSetup();
   WiFiManager wm;
-  wm.resetSettings();
+  //wm.resetSettings();
 
   if (!SPIFFS.begin())
   {
@@ -144,29 +140,29 @@ void setup()
       ;
   }
 
-  pinMode(LEDH, OUTPUT);
-  pinMode(LEDM, OUTPUT);
-  pinMode(LED_RIBA, OUTPUT);
   pinMode(NUPP, INPUT);
   pinMode(VALGUS_SENSOR, INPUT);
   pinMode(debugLED, OUTPUT);
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect("AutoConnectAP", "password"); // password protected ap
+  res = wm.autoConnect("Seadistus"); // password protected ap
 
   if (!res)
   {
-    // Ei saanud ühendust
-    Serial.println("Failed to connect");
+    Serial.println("Ülesseadmine ebaõnnestus. Palun sisesta WiFi andmed");
+    lcd.setCursor(0,1);
+    lcd.print("Seadista WiFi");
     // ESP.restart();
   }
   else
   {
-    // Sai ühenduse
-    Serial.println("connected...yeey :)");
+    Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-
+    lcd.setCursor(0,1);
+    lcd.print((char)153);
+    lcd.setCursor(1,1);
+    lcd.print("hendus loodud!");
     // Kella seadetele saab ligi http://rvpkell.local
     if (!MDNS.begin("rvpkell"))
     {
@@ -180,7 +176,7 @@ void setup()
   digitalWrite(LEDH, HIGH); // Pin High
 
   // LED riba init
-  FastLED.addLeds<WS2812, LED_RIBA, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(selected_brightness); // Ledide brightness
 
   // LCD
@@ -202,7 +198,7 @@ void loop()
 {
   // Motor control
 
-  //plaadiLiigutamine();
+  plaadiLiigutamine();
   liigutaMinutiMootor("vasak", 200);
 
   // LED riba
@@ -245,6 +241,13 @@ void loop()
   lcd.print(":");
   lcd.print(timeInfo->tm_sec);
 
+  lcd.setCursor(0, 0);
+  lcd.print("Kuupaev: ");
+  lcd.print(timeInfo->tm_mday);   
+  lcd.print("-");
+  lcd.print(timeInfo->tm_mon + 1);    
+  lcd.print("-");
+  lcd.print(timeInfo->tm_year + 1904);
   if (timeInfo->tm_min != previousMinute)
   {
     if (previousMinute == 59)
