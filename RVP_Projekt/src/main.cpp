@@ -89,8 +89,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     else if (strncmp((char *)payload, "selectedcolor", 13) == 0)
     {
       char *token1 = strtok((char *)payload, "#");
-      char token2[7];
-      strncpy(token2, strtok(NULL, "#"), 6);
+      char *token2 = strtok(NULL, "#");
+      int digits = 0;
+      for (int i = 0; i < 4; i++)
+      {
+        if (isdigit(token2[i]))
+          digits++;
+      }
+      token2[digits] = 0;
       selected_color_preset = atoi(token2);
       sprintf(msg_buf, "%s:%s", token1, token2);
       Serial.printf("Sending: %s\n", msg_buf);
@@ -99,8 +105,15 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     else if (strncmp((char *)payload, "brightness", 10) == 0)
     {
       char *token1 = strtok((char *)payload, "#");
-      char token2[7];
-      strncpy(token2, strtok(NULL, "#"), 6);
+      char *token2 = strtok(NULL, "#");
+      int digits = 0;
+      for (int i = 0; i < 4; i++)
+      {
+        if (isdigit(token2[i]))
+          digits++;
+      }
+      token2[digits] = 0;
+      strncpy(token2, token2, digits);
       selected_brightness = atoi(token2);
       FastLED.setBrightness(selected_brightness);
       sprintf(msg_buf, "%s:%s", token1, token2);
@@ -177,9 +190,7 @@ void setup()
 
   // Veebiserver
   server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-    Serial.println("favicon");
-    request->send(SPIFFS, "/favicon.png", "image/png"); });
+            { request->send(SPIFFS, "/favicon.png", "image/png"); });
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
   webSocket.onEvent(onWsEvent);
