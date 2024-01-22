@@ -21,22 +21,32 @@ CRGB leds[NUM_LEDS];
 LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 
 // Variables
-
-int debugLED = 22;
-const char *ssid = "Hotspot";
-const char *password = "123456789";
 const char *ntpServer = "0.europe.pool.ntp.org";
 const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
+unsigned long button_time = 0;  
+unsigned long last_button_time = 0; 
 
-int previousMinute = -1;
-int prev_button_state = 1;
+int eelmineMinut  = -1;
 
 char colors[3][7] = {"ff0000", "00ff00", "0000ff"};
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 char msg_buf[30];
+
+void IRAM_ATTR isr() {
+    button_time = millis();
+    if (button_time - last_button_time > 250){
+      selected_color_preset++;
+      if (selected_color_preset > 3) selected_color_preset = 0;
+      Serial.print("Selected: ");
+      Serial.println(selected_color_preset);
+      Serial.println("Pressed");
+      last_button_time = button_time;
+    }
+
+}
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *payload, size_t len)
 {
@@ -71,6 +81,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
       char *token1 = strtok((char *)payload, "#");
       char token2[7];
       strncpy(token2, strtok(NULL, "#"), 6);
+      token2[6] = 0;
       if (strcmp(token1, "color1") == 0)
         sprintf(colors[0], "%s", token2);
       else if (strcmp(token1, "color2") == 0)
@@ -130,9 +141,11 @@ void setup()
   Serial.begin(115200);
   motorSetup();
   ledSetup();
+  plaadiLiigutamine("vasak");
+  attachInterrupt(NUPP, isr, FALLING);
+
   WiFiManager wm;
   //wm.resetSettings();
-
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -142,10 +155,7 @@ void setup()
 
   pinMode(NUPP, INPUT);
   pinMode(VALGUS_SENSOR, INPUT);
-  pinMode(debugLED, OUTPUT);
   bool res;
-  // res = wm.autoConnect(); // auto generated AP name from chipid
-  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
   res = wm.autoConnect("Seadistus"); // password protected ap
 
   if (!res)
@@ -173,7 +183,6 @@ void setup()
       }
     }
   }
-  digitalWrite(LEDH, HIGH); // Pin High
 
   // LED riba init
   FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -182,7 +191,6 @@ void setup()
   // LCD
   lcd.begin(16, 2);
   lcd.clear();
-  digitalWrite(LEDH, HIGH);
 
   // Veebiserver
   server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -197,67 +205,55 @@ void setup()
 void loop()
 {
   // Motor control
-
-  plaadiLiigutamine();
-  liigutaMinutiMootor("vasak", 200);
-
-  // LED riba
-  /*int ledBrightness = 100;
-  leds[0] = CHSV(0,255,ledBrightness);
-  leds[1] = CHSV(32,255,ledBrightness);
-  leds[2] = CHSV(96,255,ledBrightness);
-  leds[3] = CHSV(24,255,ledBrightness);
-  leds[4] = CHSV(0,255,ledBrightness);
-  leds[5] = CHSV(32,255,ledBrightness);
-  leds[6] = CHSV(96,255,ledBrightness);
-  leds[7] = CHSV(24,255,ledBrightness);
-  leds[8] = CHSV(0,255,ledBrightness);
-  leds[9] = CHSV(32,255,ledBrightness);
-  leds[10] = CHSV(96,255,ledBrightness);
-  FastLED.show();*/
-
-  // Nupp
-  if (digitalRead(NUPP) == LOW && prev_button_state == HIGH)
-  {
-    selected_color_preset = (selected_color_preset + 1) % 3;
-  }
-  prev_button_state = digitalRead(NUPP);
+  //liigutaMinutiMootor("vasak", 1200);
+  //liigutaTunniMootor("parem",50);
+  delay(1000);
 
   // Led riba
-  int color_num = (int)strtol(colors[selected_color_preset - 1], NULL, 16);
-  for (int i = 0; i < 11; i++)
+  char r[3];
+  r[0] = colors[selected_color_preset - 1][0];
+  r[1] = colors[selected_color_preset - 1][1];
+  char g[3];
+  g[0] = colors[selected_color_preset - 1][2];
+  g[1] = colors[selected_color_preset - 1][3];
+  char b[3];
+  b[0] = colors[selected_color_preset - 1][4];
+  b[1] = colors[selected_color_preset - 1][5];
+  for (int i = 0; i < NUM_LEDS; i++)
   {
-    leds[i] = CRGB((color_num & 0xff0000) >> 4, (color_num & 0x00ff00) >> 2, (color_num & 0x0000ff));
+    leds[i] = CRGB(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
   }
-
+  FastLED.show();
   time_t now = time(nullptr);
   struct tm *timeInfo;
   timeInfo = localtime(&now);
-  lcd.setCursor(0, 1);
-  lcd.print("Kell: ");
-  lcd.print(timeInfo->tm_hour);
-  lcd.print(":");
-  lcd.print(timeInfo->tm_min);
-  lcd.print(":");
-  lcd.print(timeInfo->tm_sec);
-
   lcd.setCursor(0, 0);
-  lcd.print("Kuupaev: ");
+  lcd.print("Kuup");
+  lcd.print((char)0b10000100);
+  lcd.setCursor(5,0);
+  lcd.print("ev: ");
   lcd.print(timeInfo->tm_mday);   
   lcd.print("-");
   lcd.print(timeInfo->tm_mon + 1);    
   lcd.print("-");
-  lcd.print(timeInfo->tm_year + 1904);
-  if (timeInfo->tm_min != previousMinute)
-  {
-    if (previousMinute == 59)
-    {
-      liigutaMinutiMootor("vasak", 1200);
+  lcd.print(timeInfo->tm_year % 100);
+  if (timeInfo->tm_min != eelmineMinut) {
+    if (eelmineMinut == 59) {
+      liigutaMinutiMootor("vasak",minutAlgusesse);
     }
-    liigutaMinutiMootor("vasak", 200);
-    previousMinute = timeInfo->tm_min;
+    liigutaMinutiMootor("parem",minutiSamm);
+    eelmineMinut = timeInfo->tm_min;
   }
-  lcd.setCursor(0, 0);
-  lcd.print(previousMinute);
-  delay(100);
+  if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59) {
+    plaadiLiigutamine("vasak");
+  } else if (timeInfo->tm_hour == 23 && timeInfo->tm_min == 59) {
+    plaadiLiigutamine("parem");
+  }
+  if (Serial.available() > 0) {
+          String input = Serial.readStringUntil('\n');
+          int steps = input.toInt();
+          liigutaTunniMootor("vasak",steps);
+      }
+  //delay(100);
 }
+

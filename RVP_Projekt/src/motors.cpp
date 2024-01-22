@@ -13,8 +13,6 @@ const int numberOfSteps = 1000;
 const int kaugus = 4;
 const int nsleep = 23;
 
-const int minutiSamm = 200;
-const int minutAlgusesse = 1200;
 const int sammuArv = 0;
 
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin){
@@ -30,8 +28,12 @@ void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int st
   digitalWrite(nsleep, LOW); // Nsleep LOW
 }
 
-void plaadiLiigutamine(){
-  digitalWrite(directionNum, HIGH);
+void plaadiLiigutamine(String suund){
+  if (suund == "vasak"){
+    digitalWrite(directionMin, LOW);
+  } else {
+    digitalWrite(directionMin, HIGH);
+  }
   moveStepper(numberOfSteps, 50, 2, stepNum);
   digitalWrite(directionNum, LOW);
   moveStepper(numberOfSteps, 50, 2, stepNum);
@@ -48,11 +50,11 @@ void liigutaMinutiMootor(String suund, int sammuArv = 200){
 
 void liigutaTunniMootor(String suund, int sammuArv = 200){
   if (suund == "vasak"){
-    digitalWrite(directionMin, LOW);
+    digitalWrite(directionTund, LOW);
   } else {
-    digitalWrite(directionMin, HIGH);
+    digitalWrite(directionTund, HIGH);
   }
-  moveStepper(sammuArv, 50, 2, stepMin);
+  moveStepper(sammuArv, 50, 2, stepTund);
 }
 
 void motorSetup() {
@@ -67,4 +69,3 @@ void motorSetup() {
 
     pinMode(nsleep, OUTPUT);
 }
-
