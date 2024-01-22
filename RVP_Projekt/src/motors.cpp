@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 const int directionNum = 33;
-const int stepNum= 32;
+const int stepNum = 32;
 
 const int directionTund = 26;
 const int stepTund = 25;
@@ -15,7 +15,8 @@ const int nsleep = 23;
 
 const int sammuArv = 0;
 
-void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin){
+void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin)
+{
   digitalWrite(nsleep, HIGH); // Nsleep High
   for (int n = 0; n < steps; n++)
   {
@@ -28,10 +29,14 @@ void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int st
   digitalWrite(nsleep, LOW); // Nsleep LOW
 }
 
-void plaadiLiigutamine(String suund){
-  if (suund == "vasak"){
+void plaadiLiigutamine(String suund)
+{
+  if (suund == "vasak")
+  {
     digitalWrite(directionMin, LOW);
-  } else {
+  }
+  else
+  {
     digitalWrite(directionMin, HIGH);
   }
   moveStepper(numberOfSteps, 50, 2, stepNum);
@@ -39,33 +44,43 @@ void plaadiLiigutamine(String suund){
   moveStepper(numberOfSteps, 50, 2, stepNum);
 }
 
-void liigutaMinutiMootor(int sammuArv = 200){
-  if (sammuArv < 0){
+void liigutaMinutiMootor(int sammuArv = 200)
+{
+  if (sammuArv < 0)
+  {
     digitalWrite(directionMin, LOW);
-  } else {
+  }
+  else
+  {
     digitalWrite(directionMin, HIGH);
   }
-  moveStepper((sammuArv*-1), 50, 2, stepMin);
+  moveStepper((sammuArv * -1), 50, 2, stepMin);
 }
 
-void liigutaTunniMootor(int sammuArv = 200){
-  if (sammuArv < 0){
+void liigutaTunniMootor(int sammuArv = 200)
+{
+  if (sammuArv < 0)
+  {
     digitalWrite(directionTund, LOW);
-  } else {
+    sammuArv *= -1;
+  }
+  else
+  {
     digitalWrite(directionTund, HIGH);
   }
-  moveStepper((sammuArv*-1), 50, 2, stepTund);
+  moveStepper(sammuArv, 50, 2, stepTund);
 }
 
-void motorSetup() {
-    pinMode(directionNum, OUTPUT);
-    pinMode(stepNum, OUTPUT);
+void motorSetup()
+{
+  pinMode(directionNum, OUTPUT);
+  pinMode(stepNum, OUTPUT);
 
-    pinMode(directionMin, OUTPUT);
-    pinMode(stepMin, OUTPUT);
+  pinMode(directionMin, OUTPUT);
+  pinMode(stepMin, OUTPUT);
 
-    pinMode(directionTund, OUTPUT);
-    pinMode(stepTund, OUTPUT);
+  pinMode(directionTund, OUTPUT);
+  pinMode(stepTund, OUTPUT);
 
-    pinMode(nsleep, OUTPUT);
+  pinMode(nsleep, OUTPUT);
 }

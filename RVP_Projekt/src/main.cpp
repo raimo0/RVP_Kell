@@ -24,28 +24,30 @@ LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 const char *ntpServer = "0.europe.pool.ntp.org";
 const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
-unsigned long button_time = 0;  
-unsigned long last_button_time = 0; 
+unsigned long button_time = 0;
+unsigned long last_button_time = 0;
 
-int eelmineMinut  = -1;
+int eelmineMinut = -1;
 
-char colors[3][7] = {"ff0000", "00ff00", "0000ff"};
+char colors[3][7] = {"00ff00", "ff0000", "0000ff"};
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 char msg_buf[30];
 
-void IRAM_ATTR isr() {
-    button_time = millis();
-    if (button_time - last_button_time > 250){
-      selected_color_preset++;
-      if (selected_color_preset > 3) selected_color_preset = 0;
-      Serial.print("Selected: ");
-      Serial.println(selected_color_preset);
-      Serial.println("Pressed");
-      last_button_time = button_time;
-    }
-
+void IRAM_ATTR isr()
+{
+  button_time = millis();
+  if (button_time - last_button_time > 250)
+  {
+    selected_color_preset++;
+    if (selected_color_preset > 3)
+      selected_color_preset = 0;
+    Serial.print("Selected: ");
+    Serial.println(selected_color_preset);
+    Serial.println("Pressed");
+    last_button_time = button_time;
+  }
 }
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *payload, size_t len)
@@ -145,7 +147,7 @@ void setup()
   attachInterrupt(NUPP, isr, FALLING);
 
   WiFiManager wm;
-  //wm.resetSettings();
+  // wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -161,7 +163,7 @@ void setup()
   if (!res)
   {
     Serial.println("Ülesseadmine ebaõnnestus. Palun sisesta WiFi andmed");
-    lcd.setCursor(0,1);
+    lcd.setCursor(0, 1);
     lcd.print("Seadista WiFi");
     // ESP.restart();
   }
@@ -169,9 +171,9 @@ void setup()
   {
     Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    lcd.setCursor(0,1);
+    lcd.setCursor(0, 1);
     lcd.print((char)153);
-    lcd.setCursor(1,1);
+    lcd.setCursor(1, 1);
     lcd.print("hendus loodud!");
     // Kella seadetele saab ligi http://rvpkell.local
     if (!MDNS.begin("rvpkell"))
@@ -204,10 +206,9 @@ void setup()
 
 void loop()
 {
-  Serial.println("Ter");
   // Motor control
-  //liigutaMinutiMootor("vasak", 1200);
-  //liigutaTunniMootor("parem",50);
+  // liigutaMinutiMootor("vasak", 1200);
+  // liigutaTunniMootor("parem",50);
   delay(1000);
 
   // Led riba
@@ -231,30 +232,36 @@ void loop()
   lcd.setCursor(0, 0);
   lcd.print("Kuup");
   lcd.print((char)0b10000100);
-  lcd.setCursor(5,0);
+  lcd.setCursor(5, 0);
   lcd.print("ev: ");
-  lcd.print(timeInfo->tm_mday);   
+  lcd.print(timeInfo->tm_mday);
   lcd.print("-");
-  lcd.print(timeInfo->tm_mon + 1);    
+  lcd.print(timeInfo->tm_mon + 1);
   lcd.print("-");
   lcd.print(timeInfo->tm_year % 100);
-  if (timeInfo->tm_min != eelmineMinut) {
-    if (eelmineMinut == 59) {
+  if (timeInfo->tm_min != eelmineMinut)
+  {
+    if (eelmineMinut == 59)
+    {
       liigutaMinutiMootor(minutAlgusesse);
     }
     liigutaMinutiMootor(minutiSamm);
     eelmineMinut = timeInfo->tm_min;
   }
-  if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59) {
+  if (timeInfo->tm_hour == 11 && timeInfo->tm_min == 59)
+  {
     plaadiLiigutamine("vasak");
-  } else if (timeInfo->tm_hour == 23 && timeInfo->tm_min == 59) {
+  }
+  else if (timeInfo->tm_hour == 23 && timeInfo->tm_min == 59)
+  {
     plaadiLiigutamine("parem");
   }
-  if (Serial.available() > 0) {
-          String input = Serial.readStringUntil('\n');
-          int steps = input.toInt();
-          liigutaTunniMootor(steps);
-      }
-  //delay(100);
+  if (Serial.available() > 0)
+  {
+    String input = Serial.readStringUntil('\n');
+    Serial.println(input);
+    int steps = input.toInt();
+    liigutaTunniMootor(steps);
+  }
+  // delay(100);
 }
-
