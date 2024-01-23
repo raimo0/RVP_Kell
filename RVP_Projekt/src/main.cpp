@@ -227,11 +227,11 @@ void setup()
   int hour = timeInfo->tm_hour;
   int minute = timeInfo->tm_min;
   int second = timeInfo->tm_sec;
-  int n = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
+  // int n = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
 
   // To print original array
   // Function calling
-  rvereseArray(minutiSammud, 0, n - 1);
+  // rvereseArray(minutiSammud, 0, n - 1);
   /*
   for (int i = 0; i <= sizeof(minutiSammud)/sizeof(minutiSammud[0]);++i){
     liigutaMinutiMootor(minutiSammud[i]);
@@ -326,58 +326,11 @@ void loop()
       plaadiLiigutamine("parem");
     }
 
-    if (currentHour != eelmineTund)
-    {
-      int length;
-      if (currentHour >= 12)
-      {
-        currentArray = tunniSammudTopelt;
-        length = sizeof(tunniSammudTopelt) / sizeof(tunniSammudTopelt[0]);
-      }
-      else
-      {
-        currentArray = tunniSammud;
-        length = sizeof(tunniSammud) / sizeof(tunniSammud[0]);
-      }
-      // Calculate total steps
-      totalSteps = 0;
-      Serial.print("Length: ");
-      Serial.println(length);
-      for (int i = 0; i < currentHour; ++i)
-      {
-        totalSteps += currentArray[i % length];
-        Serial.println(currentArray[i % length]);
-      }
-      int currentSteps = 0;
-      /*
-      if (eelmineTund >= 0 && eelmineTund < length) {
-        totalSteps = currentArray[currentHour];
-      }
-      int stepsToMove = totalSteps - currentSteps;
-      */
-      liigutaTunniMootor(totalSteps);
-      eelmineTund = currentHour;
-    }
-
     if (currentMinute != eelmineMinut)
     {
-      int length = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
-      totalSteps = 0;
-      for (int i = 0; i < currentMinute; ++i)
-      {
-        totalSteps += (minutiSammud[i % length] * -1);
-      }
-      /*
-      int currentSteps = 0;
-      if (eelmineMinut >= 0 && eelmineMinut < length) {
-        for (int i = length-10; i <=length; ++i){
-          totalSteps += (minutiSammud[i % length]*-1);
-        }
-        //currentSteps = totalSteps - minutiSammud[eelmineMinut];
-        */
+      kuvaMinut(currentMinute);
+      kuvaTund(currentHour, currentMinute);
+      eelmineMinut = currentMinute;
     }
-    // int stepsToMove = totalSteps - currentSteps;
-    liigutaMinutiMootor(totalSteps);
-    eelmineMinut = currentMinute;
   }
 }

@@ -1,24 +1,15 @@
 #include <Arduino.h>
-
-const int directionNum = 33;
-const int stepNum = 32;
-
-const int directionTund = 26;
-const int stepTund = 25;
-
-const int directionMin = 14;
-const int stepMin = 27;
+#include "motors.h"
 
 const int numberOfSteps = 1000;
 const int kaugus = 4;
-const int nsleep = 23;
-
 const int sammuArv = 0;
 const int minutAlgusesse = 3500;
 const int tundAlgusesse = -5000;
 
-void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin){
-  digitalWrite(nsleep, HIGH); // Nsleep High
+void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin)
+{
+  digitalWrite(NSLEEP, HIGH); // Nsleep High
   for (int n = 0; n < steps; n++)
   {
     digitalWrite(stepPin, HIGH);
@@ -27,76 +18,105 @@ void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int st
 
     delay(millisBetweenSteps);
   }
-  digitalWrite(nsleep, LOW); // Nsleep LOW
+  digitalWrite(NSLEEP, LOW); // Nsleep LOW
 }
 
-void plaadiLiigutamine(String suund){
+void plaadiLiigutamine(String suund)
+{
   if (suund == "vasak")
   {
-    digitalWrite(directionNum, HIGH);
+    digitalWrite(DIR_NUM, HIGH);
   }
   else
   {
-    digitalWrite(directionNum, LOW);
+    digitalWrite(DIR_NUM, LOW);
   }
-  moveStepper(numberOfSteps, 50, 2, stepNum);
+  moveStepper(numberOfSteps, 50, 2, STEP_NUM);
 }
 
-void liigutaMinutiMootor(int sammuArv = 200){
+void liigutaMinutiMootor(int sammuArv = 200)
+{
   if (sammuArv < 0)
-  {
-    digitalWrite(directionMin, LOW);
-    sammuArv *= -1;
-  }
+    digitalWrite(DIR_MIN, LOW);
   else
-  {
-    digitalWrite(directionMin, HIGH);
-  }
-  moveStepper(sammuArv, 50, 2, stepMin);
+    digitalWrite(DIR_MIN, HIGH);
+  moveStepper(abs(sammuArv), 50, 2, STEP_MIN);
+  minutiSteppideArv += sammuArv;
 }
+
+void kuvaMinut(int minut)
+{
+  liigutaMinutiMootor(minut * minutisSteppe - minutiSteppideArv);
+}
+
+/*void kuvaMinut(int minut)
+{
+  int steppePraeguseMinutiniKümneni = 0;
+  for (int i = 0; i < (int)(minut / 10); i++)
+  {
+    steppePraeguseMinutiniKümneni += minutiSammud[i];
+  }
+  liigutaMinutiMootor((steppePraeguseMinutiniKümneni + minutiSammud[(int)minut / 10] / 10 * minut) - minutiSteppideArv);
+}*/
 
 void liigutaTunniMootor(int sammuArv = 200)
 {
   if (sammuArv < 0)
-  {
-    digitalWrite(directionTund, LOW);
-    sammuArv *= -1;
-  }
+    digitalWrite(DIR_TUND, LOW);
   else
-  {
-    digitalWrite(directionTund, HIGH);
-  }
-  moveStepper(sammuArv, 50, 2, stepTund);
+    digitalWrite(DIR_TUND, HIGH);
+  moveStepper(abs(sammuArv), 50, 2, STEP_TUND);
+  tunniSteppideArv += sammuArv;
 }
 
+void kuvaTund(int tund, int minut)
+{
+  // Seier algusesse kui kell läheb üle 12 või üle 24
+  if ((eelmine_tund < 12 && tund >= 12) || (eelmine_tund >= 12 && tund < 12))
+  {
+    int sammekokku = 0;
+    for (int i = 0; i < sizeof(tunniSammud); i++)
+    {
+      sammekokku += tunniSammud[i];
+    }
+    liigutaTunniMootor(-sammekokku);
+    tunniSteppideArv = 0;
+  }
 
-void tundStarti(void) {
+  int steppePraeguseTunnini = 0;
+  int i;
+  if (tund < 12)
+    i = 0;
+  else
+    i = 12;
+  for (i = 0; i <= tund; i++)
+  {
+    steppePraeguseTunnini += tunniSammud[i];
+  }
+  liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund] / 60 * minut) - tunniSteppideArv);
+  eelmine_tund = tund;
+}
+
+void tundStarti(void)
+{
   liigutaTunniMootor(tundAlgusesse);
 }
-void minutStarti(void){
+void minutStarti(void)
+{
   liigutaMinutiMootor(minutAlgusesse);
+  liigutaMinutiMootor(-3250 - 400); // Peaks olema 0 min?
 }
-
-
-
-
-
-
-
-
-
-
 
 void motorSetup()
 {
-  pinMode(directionNum, OUTPUT);
-  pinMode(stepNum, OUTPUT);
+  pinMode(DIR_NUM, OUTPUT);
+  pinMode(STEP_NUM, OUTPUT);
 
-  pinMode(directionMin, OUTPUT);
-  pinMode(stepMin, OUTPUT);
+  pinMode(DIR_MIN, OUTPUT);
+  pinMode(STEP_MIN, OUTPUT);
 
-  pinMode(directionTund, OUTPUT);
-  pinMode(stepTund, OUTPUT);
+  pinMode(DIR_TUND, OUTPUT);
+  pinMode(STEP_TUND, OUTPUT);
 
-  pinMode(nsleep, OUTPUT);
+  pinMode(NSLEEP, OUTPUT);
 }
