@@ -44,7 +44,7 @@ void liigutaMinutiMootor(int sammuArv = 200)
   minutiSteppideArv += sammuArv;
 }
 
-void kuvaMinut(int minut)
+void kuvaMinut(int minut) // Kui see ei tööta, siis uncommenti alumine variant
 {
   liigutaMinutiMootor(minut * minutisSteppe - minutiSteppideArv);
 }
