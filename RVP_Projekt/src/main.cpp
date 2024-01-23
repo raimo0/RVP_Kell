@@ -29,7 +29,7 @@ unsigned long last_button_time = 0;
 int eelmineTund = 0; 
 int eelmineMinut = 0;
 int totalSteps = 0;
-
+int lipp = 0;
 char colors[4][7] = {"000000", "00ff00", "ff0000", "0000ff"};
 
 AsyncWebServer server(80);
@@ -136,6 +136,19 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     break;
   }
 }
+void rvereseArray(int arr[], int start, int end) 
+{ 
+    while (start < end) 
+    { 
+        int temp = arr[start];  
+        arr[start] = arr[end]; 
+        arr[end] = temp; 
+        start++; 
+        end--; 
+    }  
+} 
+
+
 
 void setup()
 {
@@ -151,9 +164,11 @@ void setup()
   attachInterrupt(NUPP, isr, FALLING);
   tundStarti();
   minutStarti();
+  liigutaMinutiMootor(-3500);
+  Serial.println("Üles");
   lcd.clear();
   WiFiManager wm;
-  // wm.resetSettings();
+  //wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -177,6 +192,7 @@ void setup()
   {
     Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    delay(4000);
     lcd.setCursor(0, 1);
     lcd.print((char)153);
     lcd.setCursor(1, 1);
@@ -213,17 +229,17 @@ void setup()
   int hour = timeInfo->tm_hour;
   int minute = timeInfo->tm_min;
   int second = timeInfo->tm_sec;
-  if (hour >= 12){
-    plaadiLiigutamine("vasak");
-  } else if (hour < 12){
-    plaadiLiigutamine("parem");
-  }
+  int n = sizeof(minutiSammud) / sizeof(minutiSammud[0]);  
+  
+    // To print original array        
+    // Function calling 
+  rvereseArray(minutiSammud, 0, n-1); 
   /*
   for (int i = 0; i <= sizeof(minutiSammud)/sizeof(minutiSammud[0]);++i){
     liigutaMinutiMootor(minutiSammud[i]);
     Serial.print(minutiSammud[i]);
     Serial.println();
-    delay(10);
+    delay(1000);
   }
   */
 }
@@ -252,7 +268,15 @@ void loop()
   int currentHour = timeInfo->tm_hour;
   int currentMinute = timeInfo->tm_min;
 
+  Serial.print("Hour:");
+  Serial.println(currentHour);
+  Serial.print("Lipp:");
+  Serial.println(lipp);
+  if (lipp != 10){
+    lipp = lipp +1;
+  }
   // LCD Display
+  /*
   lcd.setCursor(0, 0);
   lcd.print("Kuup");
   lcd.print((char)0b10000100);
@@ -265,6 +289,13 @@ void loop()
   lcd.print(timeInfo->tm_year % 100);
   lcd.setCursor(0,1);
   lcd.print(WiFi.SSID());
+  */
+ lcd.setCursor(0,0);
+ lcd.print("Kell: ");
+ lcd.print(timeInfo->tm_hour);
+ lcd.print("-");
+ lcd.print(timeInfo->tm_min);
+
 
   if (Serial.available() > 0){
     String input = Serial.readStringUntil('\n');
@@ -286,61 +317,60 @@ void loop()
   Serial.println(eelmineTund);
   */
   int* currentArray;
-
-  if (currentHour != eelmineTund) {
-    Serial.print("Currenthour");
-    Serial.println(currentHour);
-    int length;
-    if (currentHour >= 12) {
-      currentArray = tunniSammudTopelt;
-      length = sizeof(tunniSammudTopelt) / sizeof(tunniSammudTopelt[0]);
-    } else {
-      currentArray = tunniSammud;
-      length = sizeof(tunniSammud) / sizeof(tunniSammud[0]);
+  if (lipp >= 10) {
+    if (currentMinute >= 12){
+      plaadiLiigutamine("vasak");
+    } else if (currentMinute < 12){
+      plaadiLiigutamine("parem");
     }
-    // Calculate total steps
-    totalSteps = 0;
-    for (int i = 0; i < length; ++i) {
-      totalSteps += currentArray[i % length];
-      Serial.print("Arv: ");
-      Serial.println(currentArray[i]);
+    
+    if (currentHour != eelmineTund) {
+      int length;
+      if (currentHour >= 12) {
+        currentArray = tunniSammudTopelt;
+        length = sizeof(tunniSammudTopelt) / sizeof(tunniSammudTopelt[0]);
+      } else {
+        currentArray = tunniSammud;
+        length = sizeof(tunniSammud) / sizeof(tunniSammud[0]);
+      }
+      // Calculate total steps
+      totalSteps = 0;
+      Serial.print("Length: ");
+      Serial.println(length);
+      for (int i = 0; i < currentHour; ++i) {
+        totalSteps += currentArray[i % length];
+        Serial.println(currentArray[i % length]);
+      }
+      int currentSteps = 0;
+      /*
+      if (eelmineTund >= 0 && eelmineTund < length) {
+        totalSteps = currentArray[currentHour];
+      }
+      int stepsToMove = totalSteps - currentSteps;
+      */
+      liigutaTunniMootor(totalSteps);
+      eelmineTund = currentHour;
+
     }
-    int currentSteps = 0;
-    if (eelmineTund >= 0 && eelmineTund < length) {
-      currentSteps = totalSteps - currentArray[eelmineTund];
-    }
-    int stepsToMove = totalSteps - currentSteps;
-
-    liigutaTunniMootor(totalSteps);
-    eelmineTund = currentHour;
-
-  }
-
-  
-  if (currentMinute != eelmineMinut) {
-    eelmineTund = currentHour;
-
-    int length = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
-
-    totalSteps = 0;
-    for (int i = 60; i >= currentMinute + 1; ++i) {
-      totalSteps += minutiSammud[i % length];
-    }
-
-    int currentSteps = 0;
-    if (eelmineMinut >= 0 && eelmineMinut < length) {
-      currentSteps = totalSteps - minutiSammud[eelmineMinut];
-    }
-
-    int stepsToMove = totalSteps - currentSteps;
-
-    liigutaMinutiMootor(stepsToMove);
-
-    eelmineMinut = currentMinute;
-  }
-  
-  
     
   
-  // delay(100);
+    if (currentMinute != eelmineMinut) {
+      int length = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
+      totalSteps = 0;
+      for (int i = 0; i < currentMinute; ++i) {
+        totalSteps += (minutiSammud[i% length]*-1);
+      }
+      /*
+      int currentSteps = 0;
+      if (eelmineMinut >= 0 && eelmineMinut < length) {
+        for (int i = length-10; i <=length; ++i){
+          totalSteps += (minutiSammud[i % length]*-1);
+        }
+        //currentSteps = totalSteps - minutiSammud[eelmineMinut];
+        */
+      }
+    // int stepsToMove = totalSteps - currentSteps;
+      liigutaMinutiMootor(totalSteps);
+      eelmineMinut = currentMinute;
+  }
 }

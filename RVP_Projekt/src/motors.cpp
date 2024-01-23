@@ -14,7 +14,7 @@ const int kaugus = 4;
 const int nsleep = 23;
 
 const int sammuArv = 0;
-const int minutAlgusesse = 5000;
+const int minutAlgusesse = 3500;
 const int tundAlgusesse = -5000;
 
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin){
