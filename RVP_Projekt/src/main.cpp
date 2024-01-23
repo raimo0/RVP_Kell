@@ -26,7 +26,7 @@ const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
 unsigned long button_time = 0;
 unsigned long last_button_time = 0;
-int eelmineTund = 0; 
+int eelmineTund = 0;
 int eelmineMinut = 0;
 int totalSteps = 0;
 int lipp = 0;
@@ -39,7 +39,8 @@ char msg_buf[30];
 void IRAM_ATTR isr()
 {
   button_time = millis();
-  if (button_time - last_button_time > 250){
+  if (button_time - last_button_time > 250)
+  {
     selected_color_preset++;
     if (selected_color_preset > 3)
       selected_color_preset = 0;
@@ -47,6 +48,7 @@ void IRAM_ATTR isr()
   }
   char msg[30];
   sprintf(msg, "selectedcolor:%i", selected_color_preset);
+  webSocket.textAll(msg);
 }
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *payload, size_t len)
@@ -136,19 +138,17 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     break;
   }
 }
-void rvereseArray(int arr[], int start, int end) 
-{ 
-    while (start < end) 
-    { 
-        int temp = arr[start];  
-        arr[start] = arr[end]; 
-        arr[end] = temp; 
-        start++; 
-        end--; 
-    }  
-} 
-
-
+void rvereseArray(int arr[], int start, int end)
+{
+  while (start < end)
+  {
+    int temp = arr[start];
+    arr[start] = arr[end];
+    arr[end] = temp;
+    start++;
+    end--;
+  }
+}
 
 void setup()
 {
@@ -156,19 +156,18 @@ void setup()
   // LCD
   lcd.begin(16, 2);
   lcd.clear();
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Seadistus");
   motorSetup();
   ledSetup();
-  //plaadiLiigutamine("parem");
-  attachInterrupt(NUPP, isr, FALLING);
+  // plaadiLiigutamine("parem");
   tundStarti();
   minutStarti();
   liigutaMinutiMootor(-3500);
   Serial.println("Üles");
   lcd.clear();
   WiFiManager wm;
-  //wm.resetSettings();
+  // wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -208,12 +207,11 @@ void setup()
       }
     }
   }
+  attachInterrupt(NUPP, isr, FALLING);
 
   // LED riba init
   FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(selected_brightness); // Ledide brightness
-
-
 
   // Veebiserver
   server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -229,11 +227,11 @@ void setup()
   int hour = timeInfo->tm_hour;
   int minute = timeInfo->tm_min;
   int second = timeInfo->tm_sec;
-  int n = sizeof(minutiSammud) / sizeof(minutiSammud[0]);  
-  
-    // To print original array        
-    // Function calling 
-  rvereseArray(minutiSammud, 0, n-1); 
+  int n = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
+
+  // To print original array
+  // Function calling
+  rvereseArray(minutiSammud, 0, n - 1);
   /*
   for (int i = 0; i <= sizeof(minutiSammud)/sizeof(minutiSammud[0]);++i){
     liigutaMinutiMootor(minutiSammud[i]);
@@ -272,8 +270,9 @@ void loop()
   Serial.println(currentHour);
   Serial.print("Lipp:");
   Serial.println(lipp);
-  if (lipp != 10){
-    lipp = lipp +1;
+  if (lipp != 10)
+  {
+    lipp = lipp + 1;
   }
   // LCD Display
   /*
@@ -290,23 +289,22 @@ void loop()
   lcd.setCursor(0,1);
   lcd.print(WiFi.SSID());
   */
- lcd.setCursor(0,0);
- lcd.print("Kell: ");
- lcd.print(timeInfo->tm_hour);
- lcd.print("-");
- lcd.print(timeInfo->tm_min);
+  lcd.setCursor(0, 0);
+  lcd.print("Kell: ");
+  lcd.print(timeInfo->tm_hour);
+  lcd.print("-");
+  lcd.print(timeInfo->tm_min);
 
-
-  if (Serial.available() > 0){
+  if (Serial.available() > 0)
+  {
     String input = Serial.readStringUntil('\n');
     Serial.println(input);
     int steps = input.toInt();
     liigutaMinutiMootor(steps);
   }
-  
 
-  
-  if ((currentHour == 12 && eelmineTund == 11) || (currentHour == 0 && eelmineTund == 23)) {
+  if ((currentHour == 12 && eelmineTund == 11) || (currentHour == 0 && eelmineTund == 23))
+  {
     plaadiLiigutamine("vasak");
     tundStarti();
   }
@@ -316,20 +314,28 @@ void loop()
   Serial.print("eelmineTund");
   Serial.println(eelmineTund);
   */
-  int* currentArray;
-  if (lipp >= 10) {
-    if (currentMinute >= 12){
+  int *currentArray;
+  if (lipp >= 10)
+  {
+    if (currentMinute >= 12)
+    {
       plaadiLiigutamine("vasak");
-    } else if (currentMinute < 12){
+    }
+    else if (currentMinute < 12)
+    {
       plaadiLiigutamine("parem");
     }
-    
-    if (currentHour != eelmineTund) {
+
+    if (currentHour != eelmineTund)
+    {
       int length;
-      if (currentHour >= 12) {
+      if (currentHour >= 12)
+      {
         currentArray = tunniSammudTopelt;
         length = sizeof(tunniSammudTopelt) / sizeof(tunniSammudTopelt[0]);
-      } else {
+      }
+      else
+      {
         currentArray = tunniSammud;
         length = sizeof(tunniSammud) / sizeof(tunniSammud[0]);
       }
@@ -337,7 +343,8 @@ void loop()
       totalSteps = 0;
       Serial.print("Length: ");
       Serial.println(length);
-      for (int i = 0; i < currentHour; ++i) {
+      for (int i = 0; i < currentHour; ++i)
+      {
         totalSteps += currentArray[i % length];
         Serial.println(currentArray[i % length]);
       }
@@ -350,15 +357,15 @@ void loop()
       */
       liigutaTunniMootor(totalSteps);
       eelmineTund = currentHour;
-
     }
-    
-  
-    if (currentMinute != eelmineMinut) {
+
+    if (currentMinute != eelmineMinut)
+    {
       int length = sizeof(minutiSammud) / sizeof(minutiSammud[0]);
       totalSteps = 0;
-      for (int i = 0; i < currentMinute; ++i) {
-        totalSteps += (minutiSammud[i% length]*-1);
+      for (int i = 0; i < currentMinute; ++i)
+      {
+        totalSteps += (minutiSammud[i % length] * -1);
       }
       /*
       int currentSteps = 0;
@@ -368,9 +375,9 @@ void loop()
         }
         //currentSteps = totalSteps - minutiSammud[eelmineMinut];
         */
-      }
+    }
     // int stepsToMove = totalSteps - currentSteps;
-      liigutaMinutiMootor(totalSteps);
-      eelmineMinut = currentMinute;
+    liigutaMinutiMootor(totalSteps);
+    eelmineMinut = currentMinute;
   }
 }
