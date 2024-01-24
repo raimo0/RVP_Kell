@@ -15,10 +15,10 @@ const int tundAlgusesse = -5000;
 const int minutisSteppe = 45;
 int minutiSteppideArv = 0;
 int tunniSteppideArv = 0;
-const int tunniSammud[25] = {0, 250, 250, 250, 250, 400, 300, 350, 300, 300, 250, 250, 200, 400, 250, 250, 250, 250, 300, 300, 300, 300, 300, 200, 200};
-const int minutiSammud[8] = {0, 500, 450, 500, 450, 450, 500};
+const int tunniSammud[25] = {0, 225, 200, 250, 260, 320, 470, 350, 300, 300, 250, 250, 200, 225, 200, 250, 260, 320, 470, 350, 300, 300, 250, 250, 200};
+// 4505
+const int minutiSammud[8] = {0, 500, 490, 500, 450, 450, 460};
 int tunniSammudTopelt[25] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 250, 250, 250, 250, 300, 300, 300, 300, 300, 200, 200, 200};
-
 
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin)
 {
@@ -49,6 +49,7 @@ void plaadiLiigutamine(String suund)
 
 void liigutaMinutiMootor(int sammuArv = 200)
 {
+  // Serial.printf("Liigub minuti stepper: %i\n", sammuArv);
   if (sammuArv < 0)
     digitalWrite(DIR_MIN, LOW);
   else
@@ -64,16 +65,19 @@ void liigutaMinutiMootor(int sammuArv = 200)
 
 void kuvaMinut(int minut)
 {
+  int minutikumnendik = (int)(minut / 10);
   int steppePraeguseMinutiniKumneni = 0;
-  for (int i = 0; i < (int)(minut / 10); i++)
+  for (int i = 0; i < minutikumnendik + 1; i++)
   {
     steppePraeguseMinutiniKumneni += minutiSammud[i];
   }
-  liigutaMinutiMootor((steppePraeguseMinutiniKumneni + minutiSammud[(int)minut / 10] / 10 * minut) - minutiSteppideArv);
+  // Serial.printf("Minuti: %i, %i, %i\n", (steppePraeguseMinutiniKumneni + minutiSammud[(int)minut / 10] / 10 * minut), minutiSteppideArv, (steppePraeguseMinutiniKumneni + minutiSammud[(int)minut / 10] / 10 * minut) - minutiSteppideArv);
+  liigutaMinutiMootor((steppePraeguseMinutiniKumneni + (minutiSammud[minutikumnendik] / 10) * minut % 10) - minutiSteppideArv);
 }
 
 void liigutaTunniMootor(int sammuArv = 200)
 {
+  // Serial.printf("Liigub tunni stepper: %i\n", sammuArv);
   if (sammuArv < 0)
     digitalWrite(DIR_TUND, LOW);
   else
@@ -82,17 +86,12 @@ void liigutaTunniMootor(int sammuArv = 200)
   tunniSteppideArv += sammuArv;
 }
 
-void kuvaTund(int tund, int minut, int eelmine_tund)
+void kuvaTund(int tund, int minut, int eelminetund)
 {
   // Seier algusesse kui kell läheb üle 12 või üle 24
-  if ((eelmine_tund < 12 && tund >= 12) || (eelmine_tund >= 12 && tund < 12))
+  if ((eelminetund < 12 && tund >= 12) || (eelminetund >= 12 && tund < 12))
   {
-    int sammekokku = 0;
-    for (int i = 0; i < sizeof(tunniSammud); i++)
-    {
-      sammekokku += tunniSammud[i];
-    }
-    liigutaTunniMootor(-sammekokku);
+    liigutaTunniMootor(-tunniSteppideArv);
     tunniSteppideArv = 0;
   }
 
@@ -102,22 +101,26 @@ void kuvaTund(int tund, int minut, int eelmine_tund)
     i = 0;
   else
     i = 12;
-  for (i = 0; i <= tund; i++)
+  for (; i <= tund; i++)
   {
     steppePraeguseTunnini += tunniSammud[i];
   }
+  // Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund] / 60 * minut) - tunniSteppideArv);
   liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund] / 60 * minut) - tunniSteppideArv);
-  eelmine_tund = tund;
+  // eelmine_tund = tund;
 }
 
 void tundStarti(void)
 {
   liigutaTunniMootor(tundAlgusesse);
+  liigutaTunniMootor(400);
+  tunniSteppideArv = 0;
 }
 void minutStarti(void)
 {
   liigutaMinutiMootor(minutAlgusesse);
-  liigutaMinutiMootor(-3250 - 400); // Peaks olema 0 min?
+  liigutaMinutiMootor(-3030); // Peaks olema 0 min?
+  minutiSteppideArv = 0;
 }
 
 void motorSetup()

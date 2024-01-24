@@ -1,14 +1,10 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-
-
 //
 
-
-int eelmine_tund;
 void kuvaMinut(int minut);
-void kuvaTund(int tund, int minut, int eelmine_tund);
+void kuvaTund(int tund, int minut, int eelminetund);
 //
 
 const int minutiSamm = 200;

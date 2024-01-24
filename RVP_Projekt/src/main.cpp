@@ -35,9 +35,11 @@ char colors[4][7] = {"000000", "00ff00", "ff0000", "0000ff"};
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 char msg_buf[30];
+bool kas_nupuvajutus = false;
 
 void IRAM_ATTR isr()
 {
+  kas_nupuvajutus = true;
   button_time = millis();
   if (button_time - last_button_time > 250)
   {
@@ -46,13 +48,19 @@ void IRAM_ATTR isr()
       selected_color_preset = 0;
     last_button_time = button_time;
   }
-  char msg[30];
-  sprintf(msg, "selectedcolor:%i", selected_color_preset);
-  webSocket.textAll(msg);
 }
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *payload, size_t len)
 {
+  // Kui toimus nupuvajutus, siis saada info edasi
+  if (kas_nupuvajutus)
+  {
+    sprintf(msg_buf, "selectedcolor:%i", selected_color_preset);
+    Serial.println(msg_buf);
+    webSocket.textAll(msg_buf);
+    kas_nupuvajutus = false;
+  }
+
   switch (type)
   {
   case WS_EVT_DISCONNECT:
@@ -63,9 +71,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     IPAddress ip = client->remoteIP();
     Serial.printf("[%u] Connection from ", client->id());
     Serial.println(ip.toString());
-    for (int i = 0; i < 3; i++)
+    for (int i = 1; i <= 3; i++)
     {
-      sprintf(msg_buf, "color%i:#%s", i + 1, colors[i]);
+      sprintf(msg_buf, "color%i:#%s", i, colors[i]);
       Serial.printf("Sending to [%s]: %s\n", ip.toString(), msg_buf);
       client->text(msg_buf);
     }
@@ -86,11 +94,11 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
       strncpy(token2, strtok(NULL, "#"), 6);
       token2[6] = 0;
       if (strcmp(token1, "color1") == 0)
-        sprintf(colors[0], "%s", token2);
-      else if (strcmp(token1, "color2") == 0)
         sprintf(colors[1], "%s", token2);
-      else if (strcmp(token1, "color3") == 0)
+      else if (strcmp(token1, "color2") == 0)
         sprintf(colors[2], "%s", token2);
+      else if (strcmp(token1, "color3") == 0)
+        sprintf(colors[3], "%s", token2);
       sprintf(msg_buf, "%s:#%s", token1, token2);
       Serial.printf("Sending: %s\n", msg_buf);
       webSocket.textAll(msg_buf);
@@ -163,11 +171,10 @@ void setup()
   // plaadiLiigutamine("parem");
   tundStarti();
   minutStarti();
-  liigutaMinutiMootor(-3500);
   Serial.println("Üles");
   lcd.clear();
   WiFiManager wm;
-  //wm.resetSettings();
+  // wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -215,7 +222,6 @@ void setup()
   // LED riba init
   FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(selected_brightness); // Ledide brightness
-
 
   time_t now = time(nullptr);
   struct tm *timeInfo;
@@ -290,33 +296,23 @@ void loop()
     liigutaMinutiMootor(steps);
   }
 
-  if ((currentHour == 12 && eelmineTund == 11) || (currentHour == 0 && eelmineTund == 23))
+  if (currentHour != eelmineTund)
   {
-    plaadiLiigutamine("vasak");
-    tundStarti();
-  }
-  /*
-  Serial.print("Currenthour");
-  Serial.println(currentHour);
-  Serial.print("eelmineTund");
-  Serial.println(eelmineTund);
-  */
-  int *currentArray;
-
-  if (currentMinute >= 12)
-  {
-    plaadiLiigutamine("vasak");
-  }
-  else if (currentMinute < 12)
-  {
-    plaadiLiigutamine("parem");
+    if (currentHour >= 12)
+    {
+      plaadiLiigutamine("vasak");
+    }
+    else if (currentHour < 12)
+    {
+      plaadiLiigutamine("parem");
+    }
   }
 
   if (currentMinute != eelmineMinut)
   {
     kuvaMinut(currentMinute);
-    kuvaTund(currentHour, currentMinute, eelmine_tund);
+    kuvaTund(currentHour, currentMinute, eelmineTund);
     eelmineMinut = currentMinute;
+    eelmineTund = currentHour;
   }
-
 }
