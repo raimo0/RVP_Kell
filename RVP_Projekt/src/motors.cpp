@@ -57,20 +57,20 @@ void liigutaMinutiMootor(int sammuArv = 200)
   minutiSteppideArv += sammuArv;
 }
 
-void kuvaMinut(int minut) // Kui see ei tööta, siis uncommenti alumine variant
+/*void kuvaMinut(int minut) // Kui see ei tööta, siis uncommenti alumine variant
 {
   liigutaMinutiMootor(minut * minutisSteppe - minutiSteppideArv);
-}
+}*/
 
-/*void kuvaMinut(int minut)
+void kuvaMinut(int minut)
 {
-  int steppePraeguseMinutiniKümneni = 0;
+  int steppePraeguseMinutiniKumneni = 0;
   for (int i = 0; i < (int)(minut / 10); i++)
   {
-    steppePraeguseMinutiniKümneni += minutiSammud[i];
+    steppePraeguseMinutiniKumneni += minutiSammud[i];
   }
-  liigutaMinutiMootor((steppePraeguseMinutiniKümneni + minutiSammud[(int)minut / 10] / 10 * minut) - minutiSteppideArv);
-}*/
+  liigutaMinutiMootor((steppePraeguseMinutiniKumneni + minutiSammud[(int)minut / 10] / 10 * minut) - minutiSteppideArv);
+}
 
 void liigutaTunniMootor(int sammuArv = 200)
 {

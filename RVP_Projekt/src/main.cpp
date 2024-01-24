@@ -167,7 +167,7 @@ void setup()
   Serial.println("Üles");
   lcd.clear();
   WiFiManager wm;
-   wm.resetSettings();
+  //wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -192,11 +192,14 @@ void setup()
     Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     delay(4000);
-    lcd.setCursor(0, 1);
-    lcd.print((char)153);
-    lcd.setCursor(1, 1);
-    lcd.print("hendus loodud!");
-    lcd.clear();
+    // Veebiserver
+    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/favicon.png", "image/png"); });
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/index.html", "text/html"); });
+    webSocket.onEvent(onWsEvent);
+    server.addHandler(&webSocket);
+    server.begin();
     // Kella seadetele saab ligi http://rvpkell.local
     if (!MDNS.begin("rvpkell"))
     {
@@ -213,14 +216,7 @@ void setup()
   FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(selected_brightness); // Ledide brightness
 
-  // Veebiserver
-  server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/favicon.png", "image/png"); });
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/index.html", "text/html"); });
-  webSocket.onEvent(onWsEvent);
-  server.addHandler(&webSocket);
-  server.begin();
+
   time_t now = time(nullptr);
   struct tm *timeInfo;
   timeInfo = localtime(&now);
