@@ -1,11 +1,24 @@
 #include <Arduino.h>
-#include "motors.h"
+#define DIR_NUM 33
+#define STEP_NUM 32
+#define DIR_TUND 26
+#define STEP_TUND 25
+#define DIR_MIN 14
+#define STEP_MIN 27
+#define NSLEEP 23
 
 const int numberOfSteps = 1000;
 const int kaugus = 4;
 const int sammuArv = 0;
 const int minutAlgusesse = 3500;
 const int tundAlgusesse = -5000;
+const int minutisSteppe = 45;
+int minutiSteppideArv = 0;
+int tunniSteppideArv = 0;
+const int tunniSammud[25] = {0, 250, 250, 250, 250, 400, 300, 350, 300, 300, 250, 250, 200, 400, 250, 250, 250, 250, 300, 300, 300, 300, 300, 200, 200};
+const int minutiSammud[8] = {0, 500, 450, 500, 450, 450, 500};
+int tunniSammudTopelt[25] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 250, 250, 250, 250, 300, 300, 300, 300, 300, 200, 200, 200};
+
 
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin)
 {
@@ -69,7 +82,7 @@ void liigutaTunniMootor(int sammuArv = 200)
   tunniSteppideArv += sammuArv;
 }
 
-void kuvaTund(int tund, int minut)
+void kuvaTund(int tund, int minut, int eelmine_tund)
 {
   // Seier algusesse kui kell läheb üle 12 või üle 24
   if ((eelmine_tund < 12 && tund >= 12) || (eelmine_tund >= 12 && tund < 12))

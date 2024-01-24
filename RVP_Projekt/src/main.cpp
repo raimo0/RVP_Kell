@@ -167,7 +167,7 @@ void setup()
   Serial.println("Üles");
   lcd.clear();
   WiFiManager wm;
-  // wm.resetSettings();
+   wm.resetSettings();
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -265,15 +265,6 @@ void loop()
   timeInfo = localtime(&now);
   int currentHour = timeInfo->tm_hour;
   int currentMinute = timeInfo->tm_min;
-
-  Serial.print("Hour:");
-  Serial.println(currentHour);
-  Serial.print("Lipp:");
-  Serial.println(lipp);
-  if (lipp != 10)
-  {
-    lipp = lipp + 1;
-  }
   // LCD Display
   /*
   lcd.setCursor(0, 0);
@@ -315,22 +306,21 @@ void loop()
   Serial.println(eelmineTund);
   */
   int *currentArray;
-  if (lipp >= 10)
-  {
-    if (currentMinute >= 12)
-    {
-      plaadiLiigutamine("vasak");
-    }
-    else if (currentMinute < 12)
-    {
-      plaadiLiigutamine("parem");
-    }
 
-    if (currentMinute != eelmineMinut)
-    {
-      kuvaMinut(currentMinute);
-      kuvaTund(currentHour, currentMinute);
-      eelmineMinut = currentMinute;
-    }
+  if (currentMinute >= 12)
+  {
+    plaadiLiigutamine("vasak");
   }
+  else if (currentMinute < 12)
+  {
+    plaadiLiigutamine("parem");
+  }
+
+  if (currentMinute != eelmineMinut)
+  {
+    kuvaMinut(currentMinute);
+    kuvaTund(currentHour, currentMinute, eelmine_tund);
+    eelmineMinut = currentMinute;
+  }
+
 }
