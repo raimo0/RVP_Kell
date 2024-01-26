@@ -34,6 +34,7 @@ bool kas_nupuvajutus = false;
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 char msg_buf[30];
+bool kas_nupuvajutus = false;
 
 void IRAM_ATTR isr()
 {

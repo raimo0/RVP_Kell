@@ -18,7 +18,6 @@ int tunniSteppideArv = 0;
 const int tunniSammud[26] = {-100, 225, 250, 280, 260, 330, 370, 320, 330, 300, 290, 250, 250, 175, 200, 280, 260, 320, 470, 270, 330, 300, 250, 250, 200,250};
 const int minutiSammud[8] = {0, 470, 450, 450, 450, 450, 500};
 
-
 void moveStepper(int steps, int pulseWidthMicros, int millisBetweenSteps, int stepPin)
 {
   digitalWrite(NSLEEP, HIGH); // Nsleep High
@@ -60,6 +59,7 @@ void liigutaMinutiMootor(int sammuArv = 200)
 
 void liigutaTunniMootor(int sammuArv = 200)
 {
+  // Serial.printf("Liigub tunni stepper: %i\n", sammuArv);
   if (sammuArv < 0)
     digitalWrite(DIR_TUND, LOW);
   else
