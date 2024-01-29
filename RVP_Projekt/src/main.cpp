@@ -1,5 +1,5 @@
 #include <LiquidCrystal.h>
-#include <FastLED.h>
+// #include <FastLED.h>
 #include <WiFi.h>
 #include <time.h>
 #include <Arduino.h>
@@ -13,9 +13,6 @@
 // Connectors
 #define NUPP 4
 
-// Led riba
-CRGB leds[NUM_LEDS];
-
 // LCD
 LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 
@@ -23,73 +20,69 @@ LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 const char *ntpServer = "0.europe.pool.ntp.org";
 const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
-unsigned long button_time = 0;
-unsigned long last_button_time = 0;
+unsigned long nupuAeg = 0;
+unsigned long eelmineNupuAeg = 0;
 int eelmineTund = 0;
 int eelmineMinut = 0;
-int totalSteps = 0;
-char colors[4][7] = {"000000", "00ff00", "ff0000", "0000ff"};
-bool kas_nupuvajutus = false;
+bool kasNupuvajutus = false;
 
 AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
-char msg_buf[30];
-bool kas_nupuvajutus = false;
+char buffer[30];
 
 void IRAM_ATTR isr()
 {
-  kas_nupuvajutus = true;
-  button_time = millis();
-  if (button_time - last_button_time > 250)
+  kasNupuvajutus = true;
+  nupuAeg = millis();
+  if (nupuAeg - eelmineNupuAeg > 250)
   {
-    selected_color_preset++;
-    if (selected_color_preset > 3)
-      selected_color_preset = 0;
-    last_button_time = button_time;
+    valitudColorPreset++;
+    if (valitudColorPreset > 3)
+      valitudColorPreset = 0;
+    eelmineNupuAeg = nupuAeg;
   }
 }
 
-
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *payload, size_t len)
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   // Kui toimus nupuvajutus, siis saada info edasi
-  if (kas_nupuvajutus)
+  if (kasNupuvajutus)
   {
-    sprintf(msg_buf, "selectedcolor:%i", selected_color_preset);
-    Serial.println(msg_buf);
-    webSocket.textAll(msg_buf);
-    kas_nupuvajutus = false;
+    sprintf(buffer, "selectedcolor:%i", valitudColorPreset);
+    Serial.println(buffer);
+    webSocket.textAll(buffer);
+    kasNupuvajutus = false;
   }
 
   switch (type)
   {
   case WS_EVT_DISCONNECT:
-    Serial.printf("[%u] Disconnected!\n", 4);
+    // Serial.printf("[%u] Disconnected!\n", 4);
     break;
   case WS_EVT_CONNECT:
   {
     IPAddress ip = client->remoteIP();
-    Serial.printf("[%u] Connection from ", client->id());
-    Serial.println(ip.toString());
+    // Serial.printf("[%u] Connection from ", client->id());
+    // Serial.println(ip.toString());
     for (int i = 1; i <= 3; i++)
     {
-      sprintf(msg_buf, "color%i:#%s", i, colors[i]);
-      Serial.printf("Sending to [%s]: %s\n", ip.toString(), msg_buf);
-      client->text(msg_buf);
+      sprintf(buffer, "color%i:#%s", i, colors[i]);
+      // Serial.printf("Sending to [%s]: %s\n", ip.toString(), buffer);
+      client->text(buffer);
     }
-    sprintf(msg_buf, "selectedcolor:%i", selected_color_preset);
-    Serial.printf("Sending to [%s]: %s\n", ip.toString(), msg_buf);
-    client->text(msg_buf);
-    sprintf(msg_buf, "brightness:%i", selected_brightness);
-    Serial.printf("Sending to [%s]: %s\n", ip.toString(), msg_buf);
-    client->text(msg_buf);
+    sprintf(buffer, "selectedcolor:%i", valitudColorPreset);
+    // Serial.printf("Sending to [%s]: %s\n", ip.toString(), buffer);
+    client->text(buffer);
+    sprintf(buffer, "brightness:%i", valitudBrightness);
+    // Serial.printf("Sending to [%s]: %s\n", ip.toString(), buffer);
+    client->text(buffer);
   }
   break;
   case WS_EVT_DATA:
-    Serial.printf("[%s] Received text: %s\n", client->remoteIP().toString(), payload);
-    if (strncmp((char *)payload, "color", 5) == 0)
+    // Serial.printf("[%s] Received text: %s\n", client->remoteIP().toString(), data);
+    if (strncmp((char *)data, "color", 5) == 0)
     {
-      char *token1 = strtok((char *)payload, "#");
+      char *token1 = strtok((char *)data, "#");
       char token2[7];
       strncpy(token2, strtok(NULL, "#"), 6);
       token2[6] = 0;
@@ -99,13 +92,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         sprintf(colors[2], "%s", token2);
       else if (strcmp(token1, "color3") == 0)
         sprintf(colors[3], "%s", token2);
-      sprintf(msg_buf, "%s:#%s", token1, token2);
-      Serial.printf("Sending: %s\n", msg_buf);
-      webSocket.textAll(msg_buf);
+      sprintf(buffer, "%s:#%s", token1, token2);
+      // Serial.printf("Sending: %s\n", buffer);
+      webSocket.textAll(buffer);
     }
-    else if (strncmp((char *)payload, "selectedcolor", 13) == 0)
+    else if (strncmp((char *)data, "selectedcolor", 13) == 0)
     {
-      char *token1 = strtok((char *)payload, "#");
+      char *token1 = strtok((char *)data, "#");
       char *token2 = strtok(NULL, "#");
       int digits = 0;
       for (int i = 0; i < 4; i++)
@@ -114,14 +107,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
           digits++;
       }
       token2[digits] = 0;
-      selected_color_preset = atoi(token2);
-      sprintf(msg_buf, "%s:%s", token1, token2);
-      Serial.printf("Sending: %s\n", msg_buf);
-      webSocket.textAll(msg_buf);
+      valitudColorPreset = atoi(token2);
+      sprintf(buffer, "%s:%s", token1, token2);
+      // Serial.printf("Sending: %s\n", buffer);
+      webSocket.textAll(buffer);
     }
-    else if (strncmp((char *)payload, "brightness", 10) == 0)
+    else if (strncmp((char *)data, "brightness", 10) == 0)
     {
-      char *token1 = strtok((char *)payload, "#");
+      char *token1 = strtok((char *)data, "#");
       char *token2 = strtok(NULL, "#");
       int digits = 0;
       for (int i = 0; i < 4; i++)
@@ -131,15 +124,15 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
       }
       token2[digits] = 0;
       strncpy(token2, token2, digits);
-      selected_brightness = atoi(token2);
-      FastLED.setBrightness(selected_brightness);
-      sprintf(msg_buf, "%s:%s", token1, token2);
-      Serial.printf("Sending: %s\n", msg_buf);
-      webSocket.textAll(msg_buf);
+      valitudBrightness = atoi(token2);
+      FastLED.setBrightness(valitudBrightness);
+      sprintf(buffer, "%s:%s", token1, token2);
+      // Serial.printf("Sending: %s\n", buffer);
+      webSocket.textAll(buffer);
     }
     else
     {
-      Serial.printf("[%u] Message not recognized\n", 9);
+      // Serial.printf("[%u] Message not recognized\n", 9);
     }
     break;
   default:
@@ -150,21 +143,24 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 void setup()
 {
   Serial.begin(115200);
+
   // LCD
   lcd.begin(16, 2);
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Seadistus");
+
+  // Seadistused
   motorSetup();
   ledSetup();
   mootoridAlgusesse();
-  // plaadiLiigutamine("parem");
-  //tundStarti();
-  //minutStarti();
-  //liigutaMinutiMootor(-3500);
   lcd.clear();
-  WiFiManager wm;
-   //wm.resetSettings();
+  // plaadiLiigutamine("parem");
+  // tundStarti();
+  // minutStarti();
+  // liigutaMinutiMootor(-3500);
+
+  // SPIFFS
   if (!SPIFFS.begin())
   {
     Serial.println("Error mounting SPIFFS");
@@ -172,10 +168,11 @@ void setup()
       ;
   }
 
-  pinMode(NUPP, INPUT);
+  // WifiManager
+  WiFiManager wm;
+  // wm.resetSettings();
   bool res;
-  res = wm.autoConnect("Seadistus"); // password protected ap
-
+  res = wm.autoConnect("Seadistus");
   if (!res)
   {
     Serial.println("Ülesseadmine ebaõnnestus. Palun sisesta WiFi andmed");
@@ -206,52 +203,34 @@ void setup()
       }
     }
   }
+
+  // Nupp
+  pinMode(NUPP, INPUT);
   attachInterrupt(NUPP, isr, FALLING);
-
-  // LED riba init
-  FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(selected_brightness); // Ledide brightness
-
-
-
 }
 
 void loop()
 {
+  ledUpdate();
+  // Aeg
+  time_t aeg = time(nullptr);
+  struct tm *ajaInfo;
+  ajaInfo = localtime(&aeg);
+  int praeguneTund = ajaInfo->tm_hour;
+  int praeguneMinut = ajaInfo->tm_min;
 
-  // Led riba
-  char r[3];
-  r[0] = colors[selected_color_preset][0];
-  r[1] = colors[selected_color_preset][1];
-  char g[3];
-  g[0] = colors[selected_color_preset][2];
-  g[1] = colors[selected_color_preset][3];
-  char b[3];
-  b[0] = colors[selected_color_preset][4];
-  b[1] = colors[selected_color_preset][5];
-  for (int i = 0; i < NUM_LEDS; i++)
-  {
-    leds[i] = CRGB(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
-  }
-  FastLED.show();
-  time_t now = time(nullptr);
-  struct tm *timeInfo;
-  timeInfo = localtime(&now);
-  int currentHour = timeInfo->tm_hour;
-  int currentMinute = timeInfo->tm_min;
   // LCD Display
-  
   lcd.setCursor(0, 0);
   lcd.print("Kuup");
-  lcd.print((char)0b10000100);
+  lcd.print((char)0b10000100); // ä
   lcd.setCursor(5, 0);
   lcd.print("ev: ");
-  lcd.print(timeInfo->tm_mday);
+  lcd.print(ajaInfo->tm_mday);
   lcd.print("-");
-  lcd.print(timeInfo->tm_mon + 1);
+  lcd.print(ajaInfo->tm_mon + 1);
   lcd.print("-");
-  lcd.print(timeInfo->tm_year % 100);
-  lcd.setCursor(0,1);
+  lcd.print(ajaInfo->tm_year % 100);
+  lcd.setCursor(0, 1);
   lcd.print(WiFi.SSID());
 
   /*
@@ -261,32 +240,36 @@ void loop()
   lcd.print("-");
   lcd.print(timeInfo->tm_min);
   */
+
+  // Mootori juhtimine serialist
   if (Serial.available() > 0)
   {
     String input = Serial.readStringUntil('\n');
     Serial.println(input);
     int steps = input.toInt();
-    kuvaTund(steps,5,5);
-  }
-  
-  if (currentHour != eelmineTund)
-  {
-    if (currentHour >= 12)
-    {
-      plaadiLiigutamine("vasak",1000);
-    }
-    else if (currentHour < 12)
-    {
-      plaadiLiigutamine("parem",1000);
-    }
+    kuvaTund(steps, 5, 5);
   }
 
-  if (currentMinute != eelmineMinut)
+  /* // Liigutasin kuvaTund funktsiooni. Kui töötab, siis saab selle siit kustutada.
+  //Numbri plaadi liigutamine
+  if (praeguneTund != eelmineTund)
   {
-    kuvaMinut(currentMinute);
-    kuvaTund(currentHour, currentMinute, eelmineTund);
-    eelmineMinut = currentMinute;
-    eelmineTund = currentHour;
+    if (praeguneTund >= 12)
+    {
+      plaadiLiigutamine("vasak", 1000);
+    }
+    else if (praeguneTund < 12)
+    {
+      plaadiLiigutamine("parem", 1000);
+    }
+  }*/
+
+  // Aja kuvamine
+  if (praeguneMinut != eelmineMinut)
+  {
+    kuvaMinut(praeguneMinut);
+    kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
+    eelmineMinut = praeguneMinut;
+    eelmineTund = praeguneTund;
   }
-  
 }
