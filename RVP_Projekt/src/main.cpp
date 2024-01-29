@@ -13,6 +13,12 @@
 // Connectors
 #define NUPP 4
 
+// Mode list
+#define AUTO 0
+#define MANUAL 1
+#define SAMMUD 2
+int mode = 0;
+
 // LCD
 LiquidCrystal lcd(21, 2, 19, 18, 5, 17, 16);
 
@@ -30,6 +36,7 @@ AsyncWebServer server(80);
 AsyncWebSocket webSocket("/ws");
 char buffer[30];
 
+// Nupu interrupt
 void IRAM_ATTR isr()
 {
   kasNupuvajutus = true;
@@ -43,6 +50,7 @@ void IRAM_ATTR isr()
   }
 }
 
+// Websocket asjad
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   // Kui toimus nupuvajutus, siis saada info edasi
@@ -155,10 +163,6 @@ void setup()
   ledSetup();
   mootoridAlgusesse();
   lcd.clear();
-  // plaadiLiigutamine("parem");
-  // tundStarti();
-  // minutStarti();
-  // liigutaMinutiMootor(-3500);
 
   // SPIFFS
   if (!SPIFFS.begin())
@@ -233,45 +237,68 @@ void loop()
   lcd.setCursor(0, 1);
   lcd.print(WiFi.SSID());
 
-  /*
-  lcd.setCursor(0, 0);
-  lcd.print("Kell: ");
-  lcd.print(timeInfo->tm_hour);
-  lcd.print("-");
-  lcd.print(timeInfo->tm_min);
-  */
-
   // Mootori juhtimine serialist
   if (Serial.available() > 0)
   {
     String input = Serial.readStringUntil('\n');
     Serial.println(input);
-    int steps = input.toInt();
-    kuvaTund(steps, 0, eelmineTund);
-    eelmineTund = steps;
-    // liigutaTunniMootor(steps);
+    char *sisend = (char *)input.c_str();
+    if (strncmp(sisend, "auto", 4) == 0)
+    {
+      mode = AUTO;
+      kuvaMinut(praeguneMinut);
+      kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
+      eelmineMinut = praeguneMinut;
+      eelmineTund = praeguneTund;
+    }
+    else if (strncmp(sisend, "manual", 6) == 0)
+    {
+      mode = MANUAL;
+    }
+    else if (strncmp(sisend, "sammud", 6) == 0)
+    {
+      mode = SAMMUD;
+    }
+    if (mode == MANUAL)
+    {
+      if (strncmp(sisend, "kell", 4) == 0)
+      {
+        char *token = strtok(sisend, ":");
+        char *tund = strtok(NULL, ":");
+        char *minut = strtok(NULL, ":");
+        kuvaTund(atoi(tund), atoi(minut), eelmineTund);
+        kuvaMinut(atoi(minut));
+        Serial.printf("%s:%s\n", tund, minut);
+        eelmineTund = atoi(tund);
+        eelmineMinut = atoi(minut);
+      }
+    }
+    else if (mode == SAMMUD)
+    {
+      if (strncmp(sisend, "t", 1) == 0)
+      {
+        strtok(sisend, ":");
+        int step = atoi(strtok(NULL, ":"));
+        liigutaTunniMootor(step);
+      }
+      else if (strncmp(sisend, "m", 1) == 0)
+      {
+        strtok(sisend, ":");
+        int step = atoi(strtok(NULL, ":"));
+        liigutaMinutiMootor(step);
+      }
+    }
   }
 
-  /* // Liigutasin kuvaTund funktsiooni. Kui töötab, siis saab selle siit kustutada.
-  //Numbri plaadi liigutamine
-  if (praeguneTund != eelmineTund)
-  {
-    if (praeguneTund >= 12)
-    {
-      plaadiLiigutamine("vasak", 1000);
-    }
-    else if (praeguneTund < 12)
-    {
-      plaadiLiigutamine("parem", 1000);
-    }
-  }*/
-
   // Aja kuvamine
-  if (praeguneMinut != eelmineMinut)
+  if (mode == AUTO)
   {
-    kuvaMinut(praeguneMinut);
-    kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
-    eelmineMinut = praeguneMinut;
-    eelmineTund = praeguneTund;
+    if (praeguneMinut != eelmineMinut)
+    {
+      kuvaMinut(praeguneMinut);
+      kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
+      eelmineMinut = praeguneMinut;
+      eelmineTund = praeguneTund;
+    }
   }
 }

@@ -1,26 +1,23 @@
 #include <Arduino.h>
 #include "motors.h"
 
-// const int numberOfSteps = 1000;
-// const int sammuArv = 0;
-// const int minutAlgusesse = 3500;
-// const int tundAlgusesse = -5000;
-int stepperiKiirus = 1;
+int stepperiKiirus = 1000;
 int minutiSteppideArv = 0;
 int tunniSteppideArv = 0;
 
-const int tunniSammud[26] = {-150, 225, 250, 280, 280, 360, 350, 320, 330, 300, 290, 250, 220, /**/ 0 /*150*/, 200, 240, 240, 280, 330, 320, 330, 300, 250, 260, 250, 210};
+const int tunniSammud[26] = {-120, 225, 260, 300, 330, 360, 350, 390, 400, 310, 270, 270, 220, /**/ 150, 200, 240, 300, 340, 330, 320, 350, 300, 250, 260, 250, 210};
 const int minutiSammud[8] = {0, 470, 450, 450, 450, 450, 500};
 
-void moveStepper(int samme, int pulsiPikkusMikrodes, int millisBetweenSteps, int pin)
+void moveStepper(int samme, int pulsiPikkusMikrodes, int pausMikrodes, int pin)
 {
   digitalWrite(NSLEEP, HIGH); // Nsleep High
   for (int n = 0; n < samme; n++)
   {
     digitalWrite(pin, HIGH);
+
     delayMicroseconds(pulsiPikkusMikrodes);
     digitalWrite(pin, LOW);
-    delay(millisBetweenSteps);
+    delayMicroseconds(pausMikrodes);
   }
   digitalWrite(NSLEEP, LOW); // Nsleep LOW
 }
@@ -83,11 +80,11 @@ void kuvaTund(int tund, int minut, int eelminetund)
     // Numbri plaadi liigutamine
     if (tund >= 12)
     {
-      plaadiLiigutamine("vasak", 1000);
+      plaadiLiigutamine("vasak", 1100);
     }
     else if (tund < 12)
     {
-      plaadiLiigutamine("parem", 1000);
+      plaadiLiigutamine("parem", 1100);
     }
   }
 
@@ -104,33 +101,8 @@ void kuvaTund(int tund, int minut, int eelminetund)
       steppePraeguseTunnini += tunniSammud[i];
     }
   }
-  // Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
+  Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
   liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
-}
-
-void tundStarti(void)
-{
-
-  while (digitalRead(KONTROLL_NUPP) == 0)
-  {
-    liigutaTunniMootor(-20);
-  }
-  liigutaTunniMootor(20);
-  tunniSteppideArv = 0;
-}
-
-void minutStarti(void)
-{
-
-  while (digitalRead(KONTROLL_NUPP) == 0)
-  {
-    liigutaMinutiMootor(20);
-  }
-
-  liigutaMinutiMootor(-20);
-
-  liigutaMinutiMootor(-3250 - 400);
-  minutiSteppideArv = 0;
 }
 
 void mootoridAlgusesse()
@@ -159,7 +131,7 @@ void mootoridAlgusesse()
     plaadiLiigutamine("vasak", 50);
   }
   plaadiLiigutamine("parem", 50);
-  liigutaMinutiMootor(-3030);
+  liigutaMinutiMootor(-3120);
   liigutaTunniMootor(150);
   minutiSteppideArv = 0;
   tunniSteppideArv = 0;

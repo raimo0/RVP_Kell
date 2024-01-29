@@ -1,11 +1,6 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-// extern const int numberOfSteps;
-// extern const int minutAlgusesse;
-// extern const int tundAlgusesse;
-// extern const int sammuArv;
-
 #define DIR_NUM 33
 #define STEP_NUM 32
 #define DIR_TUND 26
