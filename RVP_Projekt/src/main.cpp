@@ -248,6 +248,8 @@ void loop()
     Serial.println(input);
     int steps = input.toInt();
     kuvaTund(steps, 5, 5);
+    eelmineTund = steps;
+    // liigutaTunniMootor(steps);
   }
 
   /* // Liigutasin kuvaTund funktsiooni. Kui töötab, siis saab selle siit kustutada.
@@ -268,7 +270,7 @@ void loop()
   if (praeguneMinut != eelmineMinut)
   {
     kuvaMinut(praeguneMinut);
-    kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
+    // kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
     eelmineMinut = praeguneMinut;
     eelmineTund = praeguneTund;
   }

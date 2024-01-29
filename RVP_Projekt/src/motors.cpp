@@ -9,8 +9,7 @@ int stepperiKiirus = 1;
 int minutiSteppideArv = 0;
 int tunniSteppideArv = 0;
 
-/// TODO: Vajab fiximist (Nüüd 1 tunni nr liiga palju ja kõik 12 edasi vist offset)
-const int tunniSammud[26] = {-100, 225, 250, 280, 260, 330, 370, 320, 330, 300, 290, 250, 250, 175, 200, 280, 260, 320, 470, 270, 330, 300, 250, 250, 200, 250};
+const int tunniSammud[26] = {-150, 225, 250, 280, 280, 360, 350, 320, 330, 300, 290, 250, 220, /**/ 150, 200, 240, 240, 280, 330, 320, 330, 300, 250, 260, 250, 210};
 const int minutiSammud[8] = {0, 470, 450, 450, 450, 450, 500};
 
 void moveStepper(int samme, int pulsiPikkusMikrodes, int millisBetweenSteps, int pin)
