@@ -247,7 +247,7 @@ void loop()
     String input = Serial.readStringUntil('\n');
     Serial.println(input);
     int steps = input.toInt();
-    kuvaTund(steps, 5, 5);
+    kuvaTund(steps, 0, eelmineTund);
     eelmineTund = steps;
     // liigutaTunniMootor(steps);
   }
@@ -270,7 +270,7 @@ void loop()
   if (praeguneMinut != eelmineMinut)
   {
     kuvaMinut(praeguneMinut);
-    // kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
+    kuvaTund(praeguneTund, praeguneMinut, eelmineTund);
     eelmineMinut = praeguneMinut;
     eelmineTund = praeguneTund;
   }

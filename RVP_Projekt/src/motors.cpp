@@ -9,7 +9,7 @@ int stepperiKiirus = 1;
 int minutiSteppideArv = 0;
 int tunniSteppideArv = 0;
 
-const int tunniSammud[26] = {-150, 225, 250, 280, 280, 360, 350, 320, 330, 300, 290, 250, 220, /**/ 150, 200, 240, 240, 280, 330, 320, 330, 300, 250, 260, 250, 210};
+const int tunniSammud[26] = {-150, 225, 250, 280, 280, 360, 350, 320, 330, 300, 290, 250, 220, /**/ 0 /*150*/, 200, 240, 240, 280, 330, 320, 330, 300, 250, 260, 250, 210};
 const int minutiSammud[8] = {0, 470, 450, 450, 450, 450, 500};
 
 void moveStepper(int samme, int pulsiPikkusMikrodes, int millisBetweenSteps, int pin)
@@ -69,7 +69,7 @@ void kuvaMinut(int minut)
     steppePraeguseMinutiniKumneni += minutiSammud[i];
   }
   // Serial.printf("Minuti: %i, %i, %i\n", (steppePraeguseMinutiniKumneni + (minutiSammud[minutikumnendik] / 10) * (minut % 10)), minutiSteppideArv, (minutiSammud[minutikumnendik] / 10) * (minut % 10));
-  liigutaMinutiMootor((steppePraeguseMinutiniKumneni + (minutiSammud[minutikumnendik] / 10) * (minut % 10)) - minutiSteppideArv);
+  liigutaMinutiMootor((steppePraeguseMinutiniKumneni + (minutiSammud[minutikumnendik + 1] / 10) * (minut % 10)) - minutiSteppideArv);
 }
 
 void kuvaTund(int tund, int minut, int eelminetund)
@@ -97,12 +97,15 @@ void kuvaTund(int tund, int minut, int eelminetund)
     i = 0;
   else
     i = 12;
-  for (; i <= tund; i++)
+  if (tund != 12)
   {
-    steppePraeguseTunnini += tunniSammud[i];
+    for (; i <= tund; i++)
+    {
+      steppePraeguseTunnini += tunniSammud[i];
+    }
   }
-  // Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund] / 60 * minut) - tunniSteppideArv);
-  liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund] / 60 * minut) - tunniSteppideArv);
+  Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
+  liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
 }
 
 void tundStarti(void)
