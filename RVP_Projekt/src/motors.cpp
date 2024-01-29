@@ -104,7 +104,7 @@ void kuvaTund(int tund, int minut, int eelminetund)
       steppePraeguseTunnini += tunniSammud[i];
     }
   }
-  Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
+  // Serial.printf("Tunni: %i, %i, %i\n", (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut), tunniSteppideArv, (steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
   liigutaTunniMootor((steppePraeguseTunnini + tunniSammud[tund + 1] / 60 * minut) - tunniSteppideArv);
 }
 
