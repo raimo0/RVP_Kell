@@ -28,7 +28,7 @@ const long gmtOffset_sec = 7200;
 const int daylightOffset_sec = 3600;
 unsigned long nupuAeg = 0;
 unsigned long eelmineNupuAeg = 0;
-int eelmineTund = 0;
+int eelmineTund = 10000;
 int eelmineMinut = 0;
 bool kasNupuvajutus = false;
 
@@ -188,7 +188,10 @@ void setup()
   {
     Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    lcd.setCursor(0,0);
+    lcd.print("Aja ootamine");
     delay(4000);
+    lcd.clear();
     // Veebiserver
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(SPIFFS, "/favicon.png", "image/png"); });
@@ -222,7 +225,6 @@ void loop()
   ajaInfo = localtime(&aeg);
   int praeguneTund = ajaInfo->tm_hour;
   int praeguneMinut = ajaInfo->tm_min;
-
   // LCD Display
   lcd.setCursor(0, 0);
   lcd.print("Kuup");
@@ -236,7 +238,6 @@ void loop()
   lcd.print(ajaInfo->tm_year % 100);
   lcd.setCursor(0, 1);
   lcd.print(WiFi.SSID());
-
   // Mootori juhtimine serialist
   if (Serial.available() > 0)
   {
