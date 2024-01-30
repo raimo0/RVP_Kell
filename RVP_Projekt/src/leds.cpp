@@ -9,8 +9,11 @@ CRGB leds[NUM_LEDS];
 
 void ledSetup()
 {
-  pinMode(LEDH, OUTPUT);
-  pinMode(LEDM, OUTPUT);
+  // pinMode(LEDH, OUTPUT);
+  // pinMode(LEDM, OUTPUT);
+  ledcSetup(0, 5000, 8);
+  ledcAttachPin(LEDH, 0);
+  ledcAttachPin(LEDM, 0);
   pinMode(LED_DATA_PIN, OUTPUT);
   pinMode(debugLED, OUTPUT);
   digitalWrite(LEDH, HIGH);
@@ -22,6 +25,7 @@ void ledSetup()
 
 void ledUpdate()
 {
+  ledcWrite(0, valitudBrightness);
   char r[3];
   r[0] = colors[valitudColorPreset][0];
   r[1] = colors[valitudColorPreset][1];

@@ -189,7 +189,7 @@ void setup()
     Serial.println("Ühendus loodud!");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lcd.setCursor(0,0);
-    lcd.print("Aja ootamine");
+    lcd.print("Kella uuendus");
     delay(4000);
     lcd.clear();
     // Veebiserver

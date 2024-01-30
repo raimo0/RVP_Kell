@@ -4,8 +4,9 @@
 int stepperiKiirus = 1000;
 int minutiSteppideArv = 0;
 int tunniSteppideArv = 0;
+bool esimeneKord = true;
 
-const int tunniSammud[26] = {-120, 225, 260, 300, 330, 360, 350, 390, 400, 310, 270, 270, 220, /**/ 150, 200, 240, 300, 340, 330, 320, 350, 300, 250, 260, 250, 210};
+const int tunniSammud[26] = {-120, 150, 270, 250, 300, 330, 340, 350, 320, 310, 270, 270, 200, /**/ 0, 200, 240, 300, 340, 330, 320, 350, 300, 250, 260, 150, 210};
 const int minutiSammud[8] = {0, 470, 450, 450, 450, 450, 500};
 
 void moveStepper(int samme, int pulsiPikkusMikrodes, int pausMikrodes, int pin)
@@ -71,6 +72,14 @@ void kuvaMinut(int minut)
 
 void kuvaTund(int tund, int minut, int eelminetund)
 {
+  if (esimeneKord)
+  {
+    if (tund < 12)
+    {
+      plaadiLiigutamine("parem", 1100);
+    }
+    esimeneKord = false;
+  }
   // Seier algusesse kui kell läheb üle 12 või üle 24
   if ((eelminetund < 12 && tund >= 12) || (eelminetund >= 12 && tund < 12))
   {
@@ -131,7 +140,7 @@ void mootoridAlgusesse()
     plaadiLiigutamine("vasak", 50);
   }
   plaadiLiigutamine("parem", 50);
-  liigutaMinutiMootor(-3120);
+  liigutaMinutiMootor(-3050);
   liigutaTunniMootor(150);
   minutiSteppideArv = 0;
   tunniSteppideArv = 0;
